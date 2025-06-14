@@ -32,7 +32,7 @@ interface Expense {
   amount: number;
   category: "personal" | "equipment" | "software" | "services" | "other";
   date: string;
-  approved: boolean;
+  status: "pending" | "approved" | "rejected";
   project_id?: string;
 }
 
@@ -76,7 +76,7 @@ const ProjectFinances = ({ project }: ProjectFinancesProps) => {
         amount: Number(expense.amount),
         category: expense.category as "personal" | "equipment" | "software" | "services" | "other",
         date: expense.date,
-        approved: true, // Por defecto consideramos gastos aprobados
+        status: expense.status as "pending" | "approved" | "rejected",
         project_id: expense.project_id,
       })) || [];
 
@@ -123,7 +123,7 @@ const ProjectFinances = ({ project }: ProjectFinancesProps) => {
         amount: Number(data.amount),
         category: data.category as "personal" | "equipment" | "software" | "services" | "other",
         date: data.date,
-        approved: true,
+        status: "approved",
         project_id: data.project_id,
       };
 
@@ -179,7 +179,7 @@ const ProjectFinances = ({ project }: ProjectFinancesProps) => {
         amount: Number(data.amount),
         category: data.category as "personal" | "equipment" | "software" | "services" | "other",
         date: data.date,
-        approved: true,
+        status: "approved",
       };
 
       setExpenses(expenses.map(exp => exp.id === editingExpense.id ? updatedExpense : exp));
@@ -264,14 +264,36 @@ const ProjectFinances = ({ project }: ProjectFinancesProps) => {
     );
   };
 
-  const approvedExpenses = expenses.filter(exp => exp.approved);
+  const getStatusBadge = (status: Expense['status']) => {
+    const colors = {
+      "pending": "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
+      "approved": "bg-green-500/20 text-green-400 border-green-500/30",
+      "rejected": "bg-red-500/20 text-red-400 border-red-500/30"
+    };
+
+    const labels = {
+      "pending": "Pendiente",
+      "approved": "Aprobado",
+      "rejected": "Rechazado"
+    };
+
+    return (
+      <Badge variant="outline" className={colors[status]}>
+        {labels[status]}
+      </Badge>
+    );
+  };
+
+  // Only count approved expenses for financial calculations
+  const approvedExpenses = expenses.filter(exp => exp.status === 'approved');
   const totalApprovedExpenses = approvedExpenses.reduce((sum, exp) => sum + exp.amount, 0);
   const budgetUsage = (totalApprovedExpenses / project.budget) * 100;
   const remainingBudget = project.budget - totalApprovedExpenses;
 
-  const expensesByCategory = expenses.reduce((acc, exp) => {
+  // Only count approved expenses for category breakdown
+  const expensesByCategory = approvedExpenses.reduce((acc, exp) => {
     if (!acc[exp.category]) acc[exp.category] = 0;
-    if (exp.approved) acc[exp.category] += exp.amount;
+    acc[exp.category] += exp.amount;
     return acc;
   }, {} as Record<string, number>);
 
@@ -366,12 +388,12 @@ const ProjectFinances = ({ project }: ProjectFinancesProps) => {
         <Card>
           <CardHeader>
             <CardTitle>Gastos por Categoría</CardTitle>
-            <CardDescription>Distribución del presupuesto por tipo de gasto</CardDescription>
+            <CardDescription>Distribución del presupuesto por tipo de gasto (solo aprobados)</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
               {Object.entries(expensesByCategory).map(([category, amount]) => {
-                const percentage = (amount / totalApprovedExpenses) * 100;
+                const percentage = totalApprovedExpenses > 0 ? (amount / totalApprovedExpenses) * 100 : 0;
                 return (
                   <div key={category} className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -384,6 +406,11 @@ const ProjectFinances = ({ project }: ProjectFinancesProps) => {
                   </div>
                 );
               })}
+              {Object.keys(expensesByCategory).length === 0 && (
+                <div className="text-center text-muted-foreground py-4">
+                  No hay gastos aprobados aún
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -420,13 +447,7 @@ const ProjectFinances = ({ project }: ProjectFinancesProps) => {
                       ${expense.amount.toLocaleString()}
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline" className={
-                        expense.approved 
-                          ? "bg-green-500/20 text-green-400 border-green-500/30"
-                          : "bg-yellow-500/20 text-yellow-400 border-yellow-500/30"
-                      }>
-                        {expense.approved ? "Aprobado" : "Pendiente"}
-                      </Badge>
+                      {getStatusBadge(expense.status)}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
