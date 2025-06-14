@@ -3,7 +3,7 @@ import { Project } from "@/data/projects";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { PlusCircle, CheckCircle, Clock, AlertTriangle, FileText, edit, trash2 } from "lucide-react";
+import { PlusCircle, CheckCircle, Clock, AlertTriangle, FileText, Edit, Trash2 } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -297,14 +297,14 @@ const ProjectRequirements = ({ project }: ProjectRequirementsProps) => {
                         size="sm"
                         onClick={() => handleEditRequirement(requirement)}
                       >
-                        <edit className="h-4 w-4" />
+                        <Edit className="h-4 w-4" />
                       </Button>
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => handleDeleteRequirement(requirement)}
                       >
-                        <trash2 className="h-4 w-4" />
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
                   </TableCell>

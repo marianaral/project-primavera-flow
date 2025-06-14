@@ -3,7 +3,7 @@ import { Project } from "@/data/projects";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { PlusCircle, DollarSign, TrendingUp, TrendingDown, AlertTriangle, edit, trash2 } from "lucide-react";
+import { PlusCircle, DollarSign, TrendingUp, TrendingDown, AlertTriangle, Edit, Trash2 } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -307,14 +307,14 @@ const ProjectFinances = ({ project }: ProjectFinancesProps) => {
                           size="sm"
                           onClick={() => handleEditExpense(expense)}
                         >
-                          <edit className="h-4 w-4" />
+                          <Edit className="h-4 w-4" />
                         </Button>
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => handleDeleteExpense(expense)}
                         >
-                          <trash2 className="h-4 w-4" />
+                          <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
                     </TableCell>

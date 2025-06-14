@@ -1,4 +1,3 @@
-
 import { useState, useMemo } from "react";
 import { projects, ProjectStatus } from "@/data/projects";
 import ProjectCard from "@/components/ProjectCard";
@@ -6,7 +5,7 @@ import ProjectForm from "@/components/project/ProjectForm";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { PlusCircle, Search, Filter, edit, trash2 } from "lucide-react";
+import { PlusCircle, Search, Filter, Edit, Trash2 } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -230,7 +229,7 @@ const Projects = () => {
                       handleEditProject(project);
                     }}
                   >
-                    <edit className="h-4 w-4" />
+                    <Edit className="h-4 w-4" />
                   </Button>
                   <Button
                     variant="outline"
@@ -241,7 +240,7 @@ const Projects = () => {
                       handleDeleteProject(project);
                     }}
                   >
-                    <trash2 className="h-4 w-4" />
+                    <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
