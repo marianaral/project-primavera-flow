@@ -20,12 +20,10 @@ const ProjectCard = ({ project }: ProjectCardProps) => {
     <Link to={`/project/${project.id}`}>
       <Card className="h-full flex flex-col hover:border-primary/80 transition-all duration-300 transform hover:-translate-y-1">
         <CardHeader>
-          <div className="flex justify-between items-start">
-            <CardTitle className="text-lg">{project.name}</CardTitle>
-            <Badge variant="outline" className={statusColors[project.status]}>
-              {project.status}
-            </Badge>
-          </div>
+          <CardTitle className="text-lg">{project.name}</CardTitle>
+          <Badge variant="outline" className={`${statusColors[project.status]} w-fit`}>
+            {project.status}
+          </Badge>
           <CardDescription className="line-clamp-2">{project.description}</CardDescription>
         </CardHeader>
         <CardContent className="flex-grow">
