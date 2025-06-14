@@ -1,10 +1,9 @@
-
 import { useState } from "react";
 import { Project } from "@/data/projects";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { PlusCircle, DollarSign, TrendingUp, TrendingDown, AlertTriangle } from "lucide-react";
+import { PlusCircle, DollarSign, TrendingUp, TrendingDown, AlertTriangle, edit, trash2 } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -13,6 +12,18 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import ExpenseForm from "./ExpenseForm";
+import { useToast } from "@/hooks/use-toast";
 
 interface Expense {
   id: string;
@@ -28,7 +39,13 @@ interface ProjectFinancesProps {
 }
 
 const ProjectFinances = ({ project }: ProjectFinancesProps) => {
-  const [expenses] = useState<Expense[]>([
+  const { toast } = useToast();
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [expenseToDelete, setExpenseToDelete] = useState<Expense | null>(null);
+  
+  const [expenses, setExpenses] = useState<Expense[]>([
     {
       id: "exp-1",
       description: "Licencias de software de desarrollo",
@@ -62,6 +79,48 @@ const ProjectFinances = ({ project }: ProjectFinancesProps) => {
       approved: false
     }
   ]);
+
+  const handleCreateExpense = (expenseData: any) => {
+    const newExpense: Expense = {
+      id: `exp-${Date.now()}`,
+      ...expenseData,
+    };
+    setExpenses([...expenses, newExpense]);
+  };
+
+  const handleEditExpense = (expense: Expense) => {
+    setEditingExpense(expense);
+    setIsFormOpen(true);
+  };
+
+  const handleUpdateExpense = (expenseData: any) => {
+    if (!editingExpense) return;
+    
+    const updatedExpense: Expense = {
+      ...editingExpense,
+      ...expenseData,
+    };
+    
+    setExpenses(expenses.map(exp => exp.id === editingExpense.id ? updatedExpense : exp));
+    setEditingExpense(null);
+  };
+
+  const handleDeleteExpense = (expense: Expense) => {
+    setExpenseToDelete(expense);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDeleteExpense = () => {
+    if (expenseToDelete) {
+      setExpenses(expenses.filter(exp => exp.id !== expenseToDelete.id));
+      toast({
+        title: "Gasto eliminado",
+        description: "El gasto ha sido eliminado correctamente",
+      });
+    }
+    setDeleteDialogOpen(false);
+    setExpenseToDelete(null);
+  };
 
   const getCategoryBadge = (category: Expense['category']) => {
     const colors = {
@@ -107,7 +166,7 @@ const ProjectFinances = ({ project }: ProjectFinancesProps) => {
             Control de gastos y presupuesto del proyecto
           </p>
         </div>
-        <Button>
+        <Button onClick={() => setIsFormOpen(true)}>
           <PlusCircle className="mr-2 h-4 w-4" />
           Registrar Gasto
         </Button>
@@ -214,10 +273,11 @@ const ProjectFinances = ({ project }: ProjectFinancesProps) => {
                   <TableHead>Descripción</TableHead>
                   <TableHead>Monto</TableHead>
                   <TableHead>Estado</TableHead>
+                  <TableHead>Acciones</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {expenses.slice(0, 4).map((expense) => (
+                {expenses.map((expense) => (
                   <TableRow key={expense.id}>
                     <TableCell>
                       {new Date(expense.date).toLocaleDateString('es-ES')}
@@ -240,6 +300,24 @@ const ProjectFinances = ({ project }: ProjectFinancesProps) => {
                         {expense.approved ? "Aprobado" : "Pendiente"}
                       </Badge>
                     </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEditExpense(expense)}
+                        >
+                          <edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDeleteExpense(expense)}
+                        >
+                          <trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -247,6 +325,36 @@ const ProjectFinances = ({ project }: ProjectFinancesProps) => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Expense Form Dialog */}
+      <ExpenseForm
+        isOpen={isFormOpen}
+        onClose={() => {
+          setIsFormOpen(false);
+          setEditingExpense(null);
+        }}
+        onSubmit={editingExpense ? handleUpdateExpense : handleCreateExpense}
+        initialData={editingExpense || undefined}
+        title={editingExpense ? "Editar Gasto" : "Registrar Gasto"}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer. Se eliminará permanentemente el gasto "{expenseToDelete?.description}".
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDeleteExpense}>
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

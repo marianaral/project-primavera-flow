@@ -1,10 +1,9 @@
-
 import { useState } from "react";
 import { Project } from "@/data/projects";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { PlusCircle, CheckCircle, Clock, AlertTriangle, FileText } from "lucide-react";
+import { PlusCircle, CheckCircle, Clock, AlertTriangle, FileText, edit, trash2 } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -13,6 +12,18 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import RequirementForm from "./RequirementForm";
+import { useToast } from "@/hooks/use-toast";
 
 interface Requirement {
   id: string;
@@ -29,7 +40,13 @@ interface ProjectRequirementsProps {
 }
 
 const ProjectRequirements = ({ project }: ProjectRequirementsProps) => {
-  const [requirements] = useState<Requirement[]>([
+  const { toast } = useToast();
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingRequirement, setEditingRequirement] = useState<Requirement | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [requirementToDelete, setRequirementToDelete] = useState<Requirement | null>(null);
+  
+  const [requirements, setRequirements] = useState<Requirement[]>([
     {
       id: "req-1",
       title: "Autenticación de usuarios",
@@ -67,6 +84,48 @@ const ProjectRequirements = ({ project }: ProjectRequirementsProps) => {
       dueDate: "2025-07-15"
     }
   ]);
+
+  const handleCreateRequirement = (requirementData: any) => {
+    const newRequirement: Requirement = {
+      id: `req-${Date.now()}`,
+      ...requirementData,
+    };
+    setRequirements([...requirements, newRequirement]);
+  };
+
+  const handleEditRequirement = (requirement: Requirement) => {
+    setEditingRequirement(requirement);
+    setIsFormOpen(true);
+  };
+
+  const handleUpdateRequirement = (requirementData: any) => {
+    if (!editingRequirement) return;
+    
+    const updatedRequirement: Requirement = {
+      ...editingRequirement,
+      ...requirementData,
+    };
+    
+    setRequirements(requirements.map(req => req.id === editingRequirement.id ? updatedRequirement : req));
+    setEditingRequirement(null);
+  };
+
+  const handleDeleteRequirement = (requirement: Requirement) => {
+    setRequirementToDelete(requirement);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDeleteRequirement = () => {
+    if (requirementToDelete) {
+      setRequirements(requirements.filter(req => req.id !== requirementToDelete.id));
+      toast({
+        title: "Requisito eliminado",
+        description: "El requisito ha sido eliminado correctamente",
+      });
+    }
+    setDeleteDialogOpen(false);
+    setRequirementToDelete(null);
+  };
 
   const getStatusIcon = (status: Requirement['status']) => {
     switch (status) {
@@ -159,7 +218,7 @@ const ProjectRequirements = ({ project }: ProjectRequirementsProps) => {
             {approvedReqs} de {requirements.length} requisitos aprobados ({completionPercentage.toFixed(0)}%)
           </p>
         </div>
-        <Button>
+        <Button onClick={() => setIsFormOpen(true)}>
           <PlusCircle className="mr-2 h-4 w-4" />
           Nuevo Requisito
         </Button>
@@ -208,6 +267,7 @@ const ProjectRequirements = ({ project }: ProjectRequirementsProps) => {
                 <TableHead>Tipo</TableHead>
                 <TableHead>Prioridad</TableHead>
                 <TableHead>Fecha límite</TableHead>
+                <TableHead>Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -230,12 +290,58 @@ const ProjectRequirements = ({ project }: ProjectRequirementsProps) => {
                   <TableCell>
                     {new Date(requirement.dueDate).toLocaleDateString('es-ES')}
                   </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleEditRequirement(requirement)}
+                      >
+                        <edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDeleteRequirement(requirement)}
+                      >
+                        <trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
         </CardContent>
       </Card>
+
+      <RequirementForm
+        isOpen={isFormOpen}
+        onClose={() => {
+          setIsFormOpen(false);
+          setEditingRequirement(null);
+        }}
+        onSubmit={editingRequirement ? handleUpdateRequirement : handleCreateRequirement}
+        initialData={editingRequirement || undefined}
+        title={editingRequirement ? "Editar Requisito" : "Nuevo Requisito"}
+      />
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer. Se eliminará permanentemente el requisito "{requirementToDelete?.title}".
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDeleteRequirement}>
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

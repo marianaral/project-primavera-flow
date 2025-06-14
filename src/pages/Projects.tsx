@@ -1,3 +1,4 @@
+
 import { useState, useMemo } from "react";
 import { projects, ProjectStatus } from "@/data/projects";
 import ProjectCard from "@/components/ProjectCard";
@@ -5,7 +6,7 @@ import ProjectForm from "@/components/project/ProjectForm";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { PlusCircle, Search, Filter } from "lucide-react";
+import { PlusCircle, Search, Filter, edit, trash2 } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -13,35 +14,90 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useToast } from "@/hooks/use-toast";
 
 const Projects = () => {
+  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<ProjectStatus | "all">("all");
   const [isProjectFormOpen, setIsProjectFormOpen] = useState(false);
+  const [editingProject, setEditingProject] = useState<any>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [projectToDelete, setProjectToDelete] = useState<any>(null);
+  const [projectList, setProjectList] = useState(projects);
 
   const handleCreateProject = (projectData: any) => {
-    // In a real app, this would save to a database
+    const newProject = {
+      id: `proj-${Date.now()}`,
+      ...projectData,
+      spent: 0,
+    };
+    setProjectList([...projectList, newProject]);
     console.log("Creating project:", projectData);
+  };
+
+  const handleEditProject = (project: any) => {
+    setEditingProject(project);
+    setIsProjectFormOpen(true);
+  };
+
+  const handleUpdateProject = (projectData: any) => {
+    if (!editingProject) return;
+    
+    const updatedProject = {
+      ...editingProject,
+      ...projectData,
+    };
+    
+    setProjectList(projectList.map(proj => proj.id === editingProject.id ? updatedProject : proj));
+    setEditingProject(null);
+  };
+
+  const handleDeleteProject = (project: any) => {
+    setProjectToDelete(project);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDeleteProject = () => {
+    if (projectToDelete) {
+      setProjectList(projectList.filter(proj => proj.id !== projectToDelete.id));
+      toast({
+        title: "Proyecto eliminado",
+        description: "El proyecto ha sido eliminado correctamente",
+      });
+    }
+    setDeleteDialogOpen(false);
+    setProjectToDelete(null);
   };
 
   // Filtrar y buscar proyectos
   const filteredProjects = useMemo(() => {
-    return projects.filter((project) => {
+    return projectList.filter((project) => {
       const matchesSearch = project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            project.description.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesStatus = statusFilter === "all" || project.status === statusFilter;
       
       return matchesSearch && matchesStatus;
     });
-  }, [searchTerm, statusFilter]);
+  }, [searchTerm, statusFilter, projectList]);
 
   // Calcular KPIs
   const kpis = useMemo(() => {
-    const totalProjects = projects.length;
-    const activeProjects = projects.filter(p => p.status === "Doing").length;
-    const finishedProjects = projects.filter(p => p.status === "Finished").length;
-    const totalBudget = projects.reduce((sum, p) => sum + p.budget, 0);
-    const totalSpent = projects.reduce((sum, p) => sum + p.spent, 0);
+    const totalProjects = projectList.length;
+    const activeProjects = projectList.filter(p => p.status === "Doing").length;
+    const finishedProjects = projectList.filter(p => p.status === "Finished").length;
+    const totalBudget = projectList.reduce((sum, p) => sum + p.budget, 0);
+    const totalSpent = projectList.reduce((sum, p) => sum + p.spent, 0);
     
     return {
       totalProjects,
@@ -51,13 +107,13 @@ const Projects = () => {
       totalSpent,
       budgetUtilization: totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0
     };
-  }, []);
+  }, [projectList]);
 
   const statusOptions: { value: ProjectStatus | "all"; label: string; count: number }[] = [
-    { value: "all", label: "Todos", count: projects.length },
-    { value: "To-do", label: "Por Hacer", count: projects.filter(p => p.status === "To-do").length },
-    { value: "Doing", label: "En Progreso", count: projects.filter(p => p.status === "Doing").length },
-    { value: "Finished", label: "Finalizados", count: projects.filter(p => p.status === "Finished").length },
+    { value: "all", label: "Todos", count: projectList.length },
+    { value: "To-do", label: "Por Hacer", count: projectList.filter(p => p.status === "To-do").length },
+    { value: "Doing", label: "En Progreso", count: projectList.filter(p => p.status === "Doing").length },
+    { value: "Finished", label: "Finalizados", count: projectList.filter(p => p.status === "Finished").length },
   ];
 
   return (
@@ -134,9 +190,9 @@ const Projects = () => {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold">
-            {filteredProjects.length === projects.length 
-              ? `Todos los proyectos (${projects.length})`
-              : `${filteredProjects.length} de ${projects.length} proyectos`
+            {filteredProjects.length === projectList.length 
+              ? `Todos los proyectos (${projectList.length})`
+              : `${filteredProjects.length} de ${projectList.length} proyectos`
             }
           </h2>
           {searchTerm && (
@@ -162,7 +218,33 @@ const Projects = () => {
         ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {filteredProjects.map((project) => (
-              <ProjectCard key={project.id} project={project} />
+              <div key={project.id} className="relative group">
+                <ProjectCard project={project} />
+                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-background/80 backdrop-blur-sm rounded-md p-1 flex gap-1">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleEditProject(project);
+                    }}
+                  >
+                    <edit className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleDeleteProject(project);
+                    }}
+                  >
+                    <trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
             ))}
           </div>
         )}
@@ -171,10 +253,32 @@ const Projects = () => {
       {/* Project Form Dialog */}
       <ProjectForm
         isOpen={isProjectFormOpen}
-        onClose={() => setIsProjectFormOpen(false)}
-        onSubmit={handleCreateProject}
-        title="Nuevo Proyecto"
+        onClose={() => {
+          setIsProjectFormOpen(false);
+          setEditingProject(null);
+        }}
+        onSubmit={editingProject ? handleUpdateProject : handleCreateProject}
+        initialData={editingProject || undefined}
+        title={editingProject ? "Editar Proyecto" : "Nuevo Proyecto"}
       />
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer. Se eliminará permanentemente el proyecto "{projectToDelete?.name}" y todos sus datos asociados.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDeleteProject}>
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
