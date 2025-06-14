@@ -39,8 +39,8 @@
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
     --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 330 84.2% 60.2%;
+    --muted-foreground: 215 20.2% 75.1%;
+    --accent: 217.2 32.6% 17.5%;
     --accent-foreground: 210 40% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
@@ -57,5 +57,28 @@
   body {
     @apply bg-background text-foreground antialiased;
     font-family: 'Inter', sans-serif;
+  }
+  
+  /* Ensure dialogs and popovers use proper theme colors */
+  [data-radix-portal] {
+    @apply text-foreground;
+  }
+  
+  /* Fix dialog content colors in dark mode */
+  .dark [role="dialog"] {
+    @apply bg-card text-card-foreground border-border;
+  }
+  
+  /* Fix form elements in dark mode */
+  .dark input,
+  .dark textarea,
+  .dark select {
+    @apply bg-input text-foreground border-border;
+  }
+  
+  /* Fix dropdown and select content */
+  .dark [data-radix-select-content],
+  .dark [data-radix-dropdown-menu-content] {
+    @apply bg-popover text-popover-foreground border-border;
   }
 }
