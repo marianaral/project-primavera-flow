@@ -14,8 +14,8 @@ export interface DatabaseTask {
   id: string;
   title: string;
   description: string | null;
-  status: string;
-  priority: string;
+  status: 'pending' | 'in-progress' | 'completed';
+  priority: 'low' | 'medium' | 'high';
   responsible: string | null;
   deadline: string | null;
   estimated_hours: number | null;
@@ -26,7 +26,7 @@ export interface DatabaseTask {
 export interface DatabaseExpense {
   id: string;
   amount: number;
-  category: string;
+  category: 'personal' | 'equipment' | 'software' | 'services' | 'other';
   description: string | null;
   date: string;
   project_id: string | null;
@@ -37,9 +37,9 @@ export interface DatabaseRequirement {
   id: string;
   title: string;
   description: string | null;
-  type: string;
-  status: string;
-  priority: string;
+  type: 'functional' | 'technical' | 'legal' | 'business';
+  status: 'pending' | 'in-review' | 'approved' | 'rejected';
+  priority: 'low' | 'medium' | 'high' | 'critical';
   deadline: string | null;
   project_id: string | null;
   created_at: string | null;
