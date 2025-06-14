@@ -125,9 +125,9 @@ const ProjectRequirements = ({ project }: ProjectRequirementsProps) => {
         id: data.id,
         title: data.title,
         description: data.description || "",
-        type: data.type,
-        status: data.status,
-        priority: data.priority,
+        type: data.type as "functional" | "technical" | "legal" | "business",
+        status: data.status as "pending" | "in-review" | "approved" | "rejected",
+        priority: data.priority as "low" | "medium" | "high" | "critical",
         dueDate: data.deadline || "",
         project_id: data.project_id,
       };
@@ -184,9 +184,9 @@ const ProjectRequirements = ({ project }: ProjectRequirementsProps) => {
         ...editingRequirement,
         title: data.title,
         description: data.description || "",
-        type: data.type,
-        status: data.status,
-        priority: data.priority,
+        type: data.type as "functional" | "technical" | "legal" | "business",
+        status: data.status as "pending" | "in-review" | "approved" | "rejected",
+        priority: data.priority as "low" | "medium" | "high" | "critical",
         dueDate: data.deadline || "",
       };
 

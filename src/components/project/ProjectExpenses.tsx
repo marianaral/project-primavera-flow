@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Project } from "@/data/projects";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -122,7 +121,7 @@ const ProjectExpenses = ({ project }: ProjectExpensesProps) => {
         id: data.id,
         description: data.description || "",
         amount: Number(data.amount),
-        category: data.category,
+        category: data.category as "personal" | "equipment" | "software" | "services" | "other",
         date: data.date,
         approved: expenseData.approved,
         project_id: data.project_id,

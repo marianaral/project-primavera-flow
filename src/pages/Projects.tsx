@@ -436,8 +436,8 @@ const Projects = () => {
           name: editingProject.name,
           description: editingProject.description,
           status: editingProject.status,
-          startDate: editingProject.start_date || "",
-          endDate: editingProject.end_date || "",
+          startDate: editingProject.startDate || "",
+          endDate: editingProject.endDate || "",
           budget: editingProject.budget || 0,
         } : undefined}
         title={editingProject ? "Editar Proyecto" : "Nuevo Proyecto"}
