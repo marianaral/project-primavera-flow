@@ -39,7 +39,7 @@
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
     --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 210 40% 85%;
+    --muted-foreground: 215 20.2% 65.1%;
     --accent: 330 84.2% 60.2%;
     --accent-foreground: 210 40% 98%;
     --destructive: 0 62.8% 30.6%;
@@ -57,25 +57,5 @@
   body {
     @apply bg-background text-foreground antialiased;
     font-family: 'Inter', sans-serif;
-  }
-  
-  .dark .text-gray-700 {
-    @apply text-white;
-  }
-  
-  .dark .text-gray-600 {
-    @apply text-gray-200;
-  }
-  
-  .dark .text-gray-500 {
-    @apply text-gray-300;
-  }
-  
-  .dark .text-black {
-    @apply text-white;
-  }
-  
-  .dark svg {
-    color: inherit;
   }
 }
