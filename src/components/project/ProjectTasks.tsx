@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Project } from "@/data/projects";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { PlusCircle, CheckCircle, Clock, AlertCircle } from "lucide-react";
+import { PlusCircle, CheckCircle, Clock, AlertCircle, Pencil, Trash2 } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -22,6 +21,18 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import TaskForm from "./TaskForm";
+import { useToast } from "@/hooks/use-toast";
 
 interface Task {
   id: string;
@@ -42,10 +53,15 @@ interface ProjectTasksProps {
 }
 
 const ProjectTasks = ({ project }: ProjectTasksProps) => {
+  const { toast } = useToast();
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
   
-  const [tasks] = useState<Task[]>([
+  const [tasks, setTasks] = useState<Task[]>([
     {
       id: "task-1",
       title: "Análisis de requisitos",
@@ -103,6 +119,52 @@ const ProjectTasks = ({ project }: ProjectTasksProps) => {
   const handleTaskClick = (task: Task) => {
     setSelectedTask(task);
     setIsDialogOpen(true);
+  };
+
+  const handleCreateTask = (taskData: any) => {
+    const newTask: Task = {
+      id: `task-${Date.now()}`,
+      ...taskData,
+      relatedRequirements: [],
+      completedHours: 0,
+      tags: taskData.tags ? taskData.tags.split(',').map((tag: string) => tag.trim()) : [],
+    };
+    setTasks([...tasks, newTask]);
+  };
+
+  const handleEditTask = (task: Task) => {
+    setEditingTask(task);
+    setIsFormOpen(true);
+  };
+
+  const handleUpdateTask = (taskData: any) => {
+    if (!editingTask) return;
+    
+    const updatedTask: Task = {
+      ...editingTask,
+      ...taskData,
+      tags: taskData.tags ? taskData.tags.split(',').map((tag: string) => tag.trim()) : [],
+    };
+    
+    setTasks(tasks.map(task => task.id === editingTask.id ? updatedTask : task));
+    setEditingTask(null);
+  };
+
+  const handleDeleteTask = (task: Task) => {
+    setTaskToDelete(task);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDeleteTask = () => {
+    if (taskToDelete) {
+      setTasks(tasks.filter(task => task.id !== taskToDelete.id));
+      toast({
+        title: "Tarea eliminada",
+        description: "La tarea ha sido eliminada correctamente",
+      });
+    }
+    setDeleteDialogOpen(false);
+    setTaskToDelete(null);
   };
 
   const getStatusIcon = (status: Task['status']) => {
@@ -168,7 +230,7 @@ const ProjectTasks = ({ project }: ProjectTasksProps) => {
             {completedTasks} de {tasks.length} tareas completadas ({progressPercentage.toFixed(0)}%)
           </p>
         </div>
-        <Button>
+        <Button onClick={() => setIsFormOpen(true)}>
           <PlusCircle className="mr-2 h-4 w-4" />
           Nueva Tarea
         </Button>
@@ -190,15 +252,12 @@ const ProjectTasks = ({ project }: ProjectTasksProps) => {
                 <TableHead>Responsable</TableHead>
                 <TableHead>Prioridad</TableHead>
                 <TableHead>Fecha límite</TableHead>
+                <TableHead>Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {tasks.map((task) => (
-                <TableRow 
-                  key={task.id} 
-                  className="cursor-pointer hover:bg-muted/50"
-                  onClick={() => handleTaskClick(task)}
-                >
+                <TableRow key={task.id}>
                   <TableCell>
                     <div className="flex items-center gap-2">
                       {getStatusIcon(task.status)}
@@ -206,7 +265,7 @@ const ProjectTasks = ({ project }: ProjectTasksProps) => {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div>
+                    <div className="cursor-pointer" onClick={() => handleTaskClick(task)}>
                       <div className="font-medium">{task.title}</div>
                       <div className="text-sm text-muted-foreground line-clamp-1">{task.description}</div>
                     </div>
@@ -216,6 +275,30 @@ const ProjectTasks = ({ project }: ProjectTasksProps) => {
                   <TableCell>
                     {new Date(task.dueDate).toLocaleDateString('es-ES')}
                   </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEditTask(task);
+                        }}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteTask(task);
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -223,6 +306,7 @@ const ProjectTasks = ({ project }: ProjectTasksProps) => {
         </CardContent>
       </Card>
 
+      {/* Task Details Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
@@ -318,6 +402,39 @@ const ProjectTasks = ({ project }: ProjectTasksProps) => {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Task Form Dialog */}
+      <TaskForm
+        isOpen={isFormOpen}
+        onClose={() => {
+          setIsFormOpen(false);
+          setEditingTask(null);
+        }}
+        onSubmit={editingTask ? handleUpdateTask : handleCreateTask}
+        initialData={editingTask ? {
+          ...editingTask,
+          tags: editingTask.tags.join(', ')
+        } : undefined}
+        title={editingTask ? "Editar Tarea" : "Nueva Tarea"}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer. Se eliminará permanentemente la tarea "{taskToDelete?.title}".
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDeleteTask}>
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

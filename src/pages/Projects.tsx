@@ -1,7 +1,7 @@
-
 import { useState, useMemo } from "react";
 import { projects, ProjectStatus } from "@/data/projects";
 import ProjectCard from "@/components/ProjectCard";
+import ProjectForm from "@/components/project/ProjectForm";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +17,12 @@ import {
 const Projects = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<ProjectStatus | "all">("all");
+  const [isProjectFormOpen, setIsProjectFormOpen] = useState(false);
+
+  const handleCreateProject = (projectData: any) => {
+    // In a real app, this would save to a database
+    console.log("Creating project:", projectData);
+  };
 
   // Filtrar y buscar proyectos
   const filteredProjects = useMemo(() => {
@@ -62,7 +68,7 @@ const Projects = () => {
           <h1 className="text-3xl font-bold tracking-tight">Proyectos</h1>
           <p className="text-muted-foreground">Gestiona todos tus proyectos desde aquí</p>
         </div>
-        <Button>
+        <Button onClick={() => setIsProjectFormOpen(true)}>
           <PlusCircle className="mr-2 h-4 w-4" />
           Nuevo Proyecto
         </Button>
@@ -161,6 +167,14 @@ const Projects = () => {
           </div>
         )}
       </div>
+
+      {/* Project Form Dialog */}
+      <ProjectForm
+        isOpen={isProjectFormOpen}
+        onClose={() => setIsProjectFormOpen(false)}
+        onSubmit={handleCreateProject}
+        title="Nuevo Proyecto"
+      />
     </div>
   );
 };
