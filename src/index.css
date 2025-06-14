@@ -103,4 +103,32 @@
   .dark [data-radix-alert-dialog-overlay] {
     background-color: rgba(0, 0, 0, 0.8);
   }
+
+  /* Fix all icons and text in dark mode */
+  .dark svg {
+    @apply text-foreground;
+  }
+
+  /* Ensure buttons have proper icon colors in dark mode */
+  .dark button svg {
+    @apply text-foreground;
+  }
+
+  /* Fix select trigger icons and text */
+  .dark [data-radix-select-trigger] {
+    @apply text-foreground;
+  }
+
+  .dark [data-radix-select-trigger] svg {
+    @apply text-foreground;
+  }
+
+  /* Fix hover buttons and their icons */
+  .dark .group:hover button {
+    @apply text-foreground;
+  }
+
+  .dark .group:hover button svg {
+    @apply text-foreground;
+  }
 }
