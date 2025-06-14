@@ -1,10 +1,12 @@
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { projects } from "@/data/projects";
 import ProjectCard from "@/components/ProjectCard";
 import ProjectForm from "@/components/project/ProjectForm";
 import { Button } from "@/components/ui/button";
-import { PlusCircle } from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { PlusCircle, TrendingUp, DollarSign, Calendar, Target, Clock, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const Dashboard = () => {
@@ -25,75 +27,213 @@ const Dashboard = () => {
     });
   };
 
-  // Calculate stats
-  const totalProjects = projectList.length;
-  const completedProjects = projectList.filter(p => p.status === "Finished").length;
-  const inProgressProjects = projectList.filter(p => p.status === "Doing").length;
-  const pendingProjects = projectList.filter(p => p.status === "To-do").length;
+  // Calcular métricas generales
+  const metrics = useMemo(() => {
+    const totalProjects = projectList.length;
+    const completedProjects = projectList.filter(p => p.status === "Finished").length;
+    const inProgressProjects = projectList.filter(p => p.status === "Doing").length;
+    const pendingProjects = projectList.filter(p => p.status === "To-do").length;
+    
+    const totalBudget = projectList.reduce((sum, p) => sum + p.budget, 0);
+    const totalSpent = projectList.reduce((sum, p) => sum + p.spent, 0);
+    const budgetUtilization = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
+    
+    const avgProgress = projectList.length > 0 ? 
+      projectList.reduce((sum, p) => sum + p.progress, 0) / projectList.length : 0;
+    
+    // Proyectos con presupuesto excedido
+    const overBudgetProjects = projectList.filter(p => p.spent > p.budget).length;
+    
+    // Proyectos próximos a vencer (próximos 30 días)
+    const now = new Date();
+    const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+    const projectsDueSoon = projectList.filter(p => {
+      const endDate = new Date(p.endDate);
+      return endDate >= now && endDate <= thirtyDaysFromNow && p.status !== "Finished";
+    }).length;
+    
+    // Eficiencia promedio (progreso vs tiempo transcurrido)
+    const activeProjects = projectList.filter(p => p.status === "Doing");
+    const avgEfficiency = activeProjects.length > 0 ? 
+      activeProjects.reduce((sum, p) => {
+        const startDate = new Date(p.startDate);
+        const endDate = new Date(p.endDate);
+        const totalDuration = endDate.getTime() - startDate.getTime();
+        const elapsedTime = now.getTime() - startDate.getTime();
+        const expectedProgress = totalDuration > 0 ? (elapsedTime / totalDuration) * 100 : 0;
+        return sum + (p.progress / Math.max(expectedProgress, 1));
+      }, 0) / activeProjects.length : 1;
+
+    return {
+      totalProjects,
+      completedProjects,
+      inProgressProjects,
+      pendingProjects,
+      totalBudget,
+      totalSpent,
+      budgetUtilization,
+      avgProgress,
+      overBudgetProjects,
+      projectsDueSoon,
+      avgEfficiency: avgEfficiency * 100,
+      completionRate: totalProjects > 0 ? (completedProjects / totalProjects) * 100 : 0
+    };
+  }, [projectList]);
 
   return (
     <div className="animate-fade-in">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold tracking-tight text-foreground">Dashboard de Proyectos</h1>
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">Dashboard de Proyectos</h1>
+          <p className="text-muted-foreground">Resumen general y métricas de rendimiento</p>
+        </div>
         <Button onClick={() => setIsProjectFormOpen(true)}>
           <PlusCircle className="mr-2 h-4 w-4" />
           Nuevo Proyecto
         </Button>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
-        <div className="bg-card border rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Total de Proyectos</p>
-              <p className="text-2xl font-bold text-foreground">{totalProjects}</p>
-            </div>
-            <PlusCircle className="h-6 w-6 text-muted-foreground" />
-          </div>
-        </div>
-        
-        <div className="bg-card border rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Completados</p>
-              <p className="text-2xl font-bold text-green-600">{completedProjects}</p>
-            </div>
-            <div className="h-6 w-6 rounded-full bg-green-500/20 flex items-center justify-center">
-              <div className="h-3 w-3 rounded-full bg-green-500"></div>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-card border rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">En Progreso</p>
-              <p className="text-2xl font-bold text-blue-600">{inProgressProjects}</p>
-            </div>
-            <div className="h-6 w-6 rounded-full bg-blue-500/20 flex items-center justify-center">
-              <div className="h-3 w-3 rounded-full bg-blue-500"></div>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-card border rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Pendientes</p>
-              <p className="text-2xl font-bold text-yellow-600">{pendingProjects}</p>
-            </div>
-            <div className="h-6 w-6 rounded-full bg-yellow-500/20 flex items-center justify-center">
-              <div className="h-3 w-3 rounded-full bg-yellow-500"></div>
-            </div>
-          </div>
-        </div>
+      {/* Métricas Principales */}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-6">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Proyectos Activos</CardTitle>
+            <Target className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-blue-600">{metrics.inProgressProjects}</div>
+            <p className="text-xs text-muted-foreground">
+              de {metrics.totalProjects} proyectos totales
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Tasa de Finalización</CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-600">{metrics.completionRate.toFixed(1)}%</div>
+            <p className="text-xs text-muted-foreground">
+              {metrics.completedProjects} proyectos completados
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Utilización Presupuesto</CardTitle>
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-foreground">{metrics.budgetUtilization.toFixed(1)}%</div>
+            <p className="text-xs text-muted-foreground">
+              ${metrics.totalSpent.toLocaleString()} / ${metrics.totalBudget.toLocaleString()}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Progreso Promedio</CardTitle>
+            <Clock className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-foreground">{metrics.avgProgress.toFixed(1)}%</div>
+            <Progress value={metrics.avgProgress} className="mt-2" />
+          </CardContent>
+        </Card>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {projectList.map((project) => (
-          <ProjectCard key={project.id} project={project} />
-        ))}
+      {/* Métricas Secundarias */}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <TrendingUp className="h-5 w-5" />
+              Eficiencia General
+            </CardTitle>
+            <CardDescription>Rendimiento vs planificación</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold mb-2">
+              {metrics.avgEfficiency.toFixed(0)}%
+            </div>
+            <Progress value={Math.min(metrics.avgEfficiency, 100)} className="mb-2" />
+            <p className="text-sm text-muted-foreground">
+              {metrics.avgEfficiency > 100 ? "Por encima de lo esperado" : 
+               metrics.avgEfficiency > 80 ? "Rendimiento óptimo" : "Requiere atención"}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5" />
+              Alertas
+            </CardTitle>
+            <CardDescription>Proyectos que requieren atención</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm">Próximos a vencer:</span>
+              <span className="font-semibold text-yellow-600">{metrics.projectsDueSoon}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm">Sobre presupuesto:</span>
+              <span className="font-semibold text-red-600">{metrics.overBudgetProjects}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm">Pendientes:</span>
+              <span className="font-semibold text-gray-600">{metrics.pendingProjects}</span>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Calendar className="h-5 w-5" />
+              Distribución de Estados
+            </CardTitle>
+            <CardDescription>Estado actual de proyectos</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-sm">Finalizados</span>
+                <span className="font-semibold text-green-600">{metrics.completedProjects}</span>
+              </div>
+              <Progress value={(metrics.completedProjects / metrics.totalProjects) * 100} className="h-2" />
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-sm">En Progreso</span>
+                <span className="font-semibold text-blue-600">{metrics.inProgressProjects}</span>
+              </div>
+              <Progress value={(metrics.inProgressProjects / metrics.totalProjects) * 100} className="h-2" />
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-sm">Pendientes</span>
+                <span className="font-semibold text-yellow-600">{metrics.pendingProjects}</span>
+              </div>
+              <Progress value={(metrics.pendingProjects / metrics.totalProjects) * 100} className="h-2" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Lista de Proyectos */}
+      <div>
+        <h2 className="text-xl font-semibold mb-4">Proyectos Recientes</h2>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {projectList.slice(0, 8).map((project) => (
+            <ProjectCard key={project.id} project={project} />
+          ))}
+        </div>
       </div>
 
       {/* Project Form Dialog */}
