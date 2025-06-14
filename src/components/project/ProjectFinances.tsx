@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Project } from "@/data/projects";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import ExpenseForm from "./ExpenseForm";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Expense {
   id: string;
@@ -32,6 +33,7 @@ interface Expense {
   category: "personal" | "equipment" | "software" | "services" | "other";
   date: string;
   approved: boolean;
+  project_id?: string;
 }
 
 interface ProjectFinancesProps {
@@ -44,48 +46,100 @@ const ProjectFinances = ({ project }: ProjectFinancesProps) => {
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [expenseToDelete, setExpenseToDelete] = useState<Expense | null>(null);
-  
-  const [expenses, setExpenses] = useState<Expense[]>([
-    {
-      id: "exp-1",
-      description: "Licencias de software de desarrollo",
-      amount: 2500,
-      category: "software",
-      date: "2025-06-01",
-      approved: true
-    },
-    {
-      id: "exp-2",
-      description: "Servidor en la nube - 3 meses",
-      amount: 1800,
-      category: "services",
-      date: "2025-06-05",
-      approved: true
-    },
-    {
-      id: "exp-3",
-      description: "Consultoría externa UX/UI",
-      amount: 8500,
-      category: "services",
-      date: "2025-06-10",
-      approved: true
-    },
-    {
-      id: "exp-4",
-      description: "Equipos de desarrollo",
-      amount: 15000,
-      category: "equipment",
-      date: "2025-06-15",
-      approved: false
-    }
-  ]);
+  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleCreateExpense = (expenseData: any) => {
-    const newExpense: Expense = {
-      id: `exp-${Date.now()}`,
-      ...expenseData,
-    };
-    setExpenses([...expenses, newExpense]);
+  useEffect(() => {
+    fetchExpenses();
+  }, [project.id]);
+
+  const fetchExpenses = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('expenses')
+        .select('*')
+        .eq('project_id', project.id);
+
+      if (error) {
+        console.error('Error fetching expenses:', error);
+        toast({
+          title: "Error",
+          description: "No se pudieron cargar los gastos",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const formattedExpenses = data?.map(expense => ({
+        id: expense.id,
+        description: expense.description || "",
+        amount: Number(expense.amount),
+        category: expense.category as "personal" | "equipment" | "software" | "services" | "other",
+        date: expense.date,
+        approved: true, // Por defecto consideramos gastos aprobados
+        project_id: expense.project_id,
+      })) || [];
+
+      setExpenses(formattedExpenses);
+    } catch (error) {
+      console.error('Error:', error);
+      toast({
+        title: "Error",
+        description: "Ocurrió un error al cargar los gastos",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCreateExpense = async (expenseData: any) => {
+    try {
+      const { data, error } = await supabase
+        .from('expenses')
+        .insert([{
+          description: expenseData.description,
+          amount: expenseData.amount,
+          category: expenseData.category,
+          date: expenseData.date,
+          project_id: project.id,
+        }])
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error creating expense:', error);
+        toast({
+          title: "Error",
+          description: "No se pudo crear el gasto",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const newExpense: Expense = {
+        id: data.id,
+        description: data.description || "",
+        amount: Number(data.amount),
+        category: data.category as "personal" | "equipment" | "software" | "services" | "other",
+        date: data.date,
+        approved: true,
+        project_id: data.project_id,
+      };
+
+      setExpenses([...expenses, newExpense]);
+      toast({
+        title: "Gasto creado",
+        description: "El gasto ha sido creado correctamente",
+      });
+    } catch (error) {
+      console.error('Error:', error);
+      toast({
+        title: "Error",
+        description: "Ocurrió un error al crear el gasto",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleEditExpense = (expense: Expense) => {
@@ -93,16 +147,55 @@ const ProjectFinances = ({ project }: ProjectFinancesProps) => {
     setIsFormOpen(true);
   };
 
-  const handleUpdateExpense = (expenseData: any) => {
+  const handleUpdateExpense = async (expenseData: any) => {
     if (!editingExpense) return;
     
-    const updatedExpense: Expense = {
-      ...editingExpense,
-      ...expenseData,
-    };
-    
-    setExpenses(expenses.map(exp => exp.id === editingExpense.id ? updatedExpense : exp));
-    setEditingExpense(null);
+    try {
+      const { data, error } = await supabase
+        .from('expenses')
+        .update({
+          description: expenseData.description,
+          amount: expenseData.amount,
+          category: expenseData.category,
+          date: expenseData.date,
+        })
+        .eq('id', editingExpense.id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error updating expense:', error);
+        toast({
+          title: "Error",
+          description: "No se pudo actualizar el gasto",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const updatedExpense: Expense = {
+        ...editingExpense,
+        description: data.description || "",
+        amount: Number(data.amount),
+        category: data.category as "personal" | "equipment" | "software" | "services" | "other",
+        date: data.date,
+        approved: true,
+      };
+
+      setExpenses(expenses.map(exp => exp.id === editingExpense.id ? updatedExpense : exp));
+      setEditingExpense(null);
+      toast({
+        title: "Gasto actualizado",
+        description: "El gasto ha sido actualizado correctamente",
+      });
+    } catch (error) {
+      console.error('Error:', error);
+      toast({
+        title: "Error",
+        description: "Ocurrió un error al actualizar el gasto",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleDeleteExpense = (expense: Expense) => {
@@ -110,14 +203,39 @@ const ProjectFinances = ({ project }: ProjectFinancesProps) => {
     setDeleteDialogOpen(true);
   };
 
-  const confirmDeleteExpense = () => {
-    if (expenseToDelete) {
+  const confirmDeleteExpense = async () => {
+    if (!expenseToDelete) return;
+
+    try {
+      const { error } = await supabase
+        .from('expenses')
+        .delete()
+        .eq('id', expenseToDelete.id);
+
+      if (error) {
+        console.error('Error deleting expense:', error);
+        toast({
+          title: "Error",
+          description: "No se pudo eliminar el gasto",
+          variant: "destructive",
+        });
+        return;
+      }
+
       setExpenses(expenses.filter(exp => exp.id !== expenseToDelete.id));
       toast({
         title: "Gasto eliminado",
         description: "El gasto ha sido eliminado correctamente",
       });
+    } catch (error) {
+      console.error('Error:', error);
+      toast({
+        title: "Error",
+        description: "Ocurrió un error al eliminar el gasto",
+        variant: "destructive",
+      });
     }
+
     setDeleteDialogOpen(false);
     setExpenseToDelete(null);
   };
@@ -156,6 +274,16 @@ const ProjectFinances = ({ project }: ProjectFinancesProps) => {
     if (exp.approved) acc[exp.category] += exp.amount;
     return acc;
   }, {} as Record<string, number>);
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-center items-center h-32">
+          <div className="text-muted-foreground">Cargando finanzas...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

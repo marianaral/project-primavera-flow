@@ -3,7 +3,7 @@ import { Project } from "@/data/projects";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { PlusCircle, CheckCircle, Clock, AlertCircle, Pencil, Trash2 } from "lucide-react";
+import { PlusCircle, Clock, CheckCircle, AlertTriangle, Edit, Trash2 } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -12,13 +12,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -30,8 +23,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import TaskForm from "./TaskForm";
-import TaskViewControls, { TaskViewType } from "./TaskViewControls";
-import TaskColumnView from "./TaskColumnView";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -40,13 +31,11 @@ interface Task {
   title: string;
   description: string;
   status: "pending" | "in-progress" | "completed";
+  priority: "low" | "medium" | "high";
   assignee: string;
   dueDate: string;
-  priority: "low" | "medium" | "high";
-  relatedRequirements: string[];
   estimatedHours: number;
-  completedHours: number;
-  tags: string[];
+  tags: string;
   project_id?: string;
 }
 
@@ -56,13 +45,10 @@ interface ProjectTasksProps {
 
 const ProjectTasks = ({ project }: ProjectTasksProps) => {
   const { toast } = useToast();
-  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
-  const [viewType, setViewType] = useState<TaskViewType>("list");
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -74,14 +60,7 @@ const ProjectTasks = ({ project }: ProjectTasksProps) => {
     try {
       const { data, error } = await supabase
         .from('tasks')
-        .select(`
-          *,
-          task_tags (
-            tags (
-              name
-            )
-          )
-        `)
+        .select('*')
         .eq('project_id', project.id);
 
       if (error) {
@@ -99,13 +78,11 @@ const ProjectTasks = ({ project }: ProjectTasksProps) => {
         title: task.title,
         description: task.description || "",
         status: task.status as "pending" | "in-progress" | "completed",
+        priority: task.priority as "low" | "medium" | "high",
         assignee: task.responsible || "",
         dueDate: task.deadline || "",
-        priority: task.priority as "low" | "medium" | "high",
-        relatedRequirements: [],
         estimatedHours: Number(task.estimated_hours) || 0,
-        completedHours: 0,
-        tags: task.task_tags?.map((tt: any) => tt.tags.name) || [],
+        tags: "", // Las etiquetas están en tabla separada
         project_id: task.project_id,
       })) || [];
 
@@ -122,11 +99,6 @@ const ProjectTasks = ({ project }: ProjectTasksProps) => {
     }
   };
 
-  const handleTaskClick = (task: Task) => {
-    setSelectedTask(task);
-    setIsDialogOpen(true);
-  };
-
   const handleCreateTask = async (taskData: any) => {
     try {
       const { data, error } = await supabase
@@ -135,10 +107,10 @@ const ProjectTasks = ({ project }: ProjectTasksProps) => {
           title: taskData.title,
           description: taskData.description,
           status: taskData.status,
+          priority: taskData.priority,
           responsible: taskData.assignee,
           deadline: taskData.dueDate || null,
-          priority: taskData.priority,
-          estimated_hours: taskData.estimatedHours || null,
+          estimated_hours: taskData.estimatedHours,
           project_id: project.id,
         }])
         .select()
@@ -154,39 +126,16 @@ const ProjectTasks = ({ project }: ProjectTasksProps) => {
         return;
       }
 
-      // Handle tags if provided
-      if (taskData.tags && taskData.tags.trim()) {
-        const tagNames = taskData.tags.split(',').map((tag: string) => tag.trim());
-        
-        for (const tagName of tagNames) {
-          // Insert or get tag
-          const { data: tagData, error: tagError } = await supabase
-            .from('tags')
-            .upsert({ name: tagName })
-            .select()
-            .single();
-
-          if (!tagError && tagData) {
-            // Link tag to task
-            await supabase
-              .from('task_tags')
-              .insert({ task_id: data.id, tag_id: tagData.id });
-          }
-        }
-      }
-
       const newTask: Task = {
         id: data.id,
         title: data.title,
         description: data.description || "",
-        status: data.status as any,
+        status: data.status as "pending" | "in-progress" | "completed",
+        priority: data.priority as "low" | "medium" | "high",
         assignee: data.responsible || "",
         dueDate: data.deadline || "",
-        priority: data.priority as any,
-        relatedRequirements: [],
         estimatedHours: Number(data.estimated_hours) || 0,
-        completedHours: 0,
-        tags: taskData.tags ? taskData.tags.split(',').map((tag: string) => tag.trim()) : [],
+        tags: taskData.tags,
         project_id: data.project_id,
       };
 
@@ -220,10 +169,10 @@ const ProjectTasks = ({ project }: ProjectTasksProps) => {
           title: taskData.title,
           description: taskData.description,
           status: taskData.status,
+          priority: taskData.priority,
           responsible: taskData.assignee,
           deadline: taskData.dueDate || null,
-          priority: taskData.priority,
-          estimated_hours: taskData.estimatedHours || null,
+          estimated_hours: taskData.estimatedHours,
         })
         .eq('id', editingTask.id)
         .select()
@@ -239,37 +188,16 @@ const ProjectTasks = ({ project }: ProjectTasksProps) => {
         return;
       }
 
-      // Update tags
-      await supabase.from('task_tags').delete().eq('task_id', editingTask.id);
-      
-      if (taskData.tags && taskData.tags.trim()) {
-        const tagNames = taskData.tags.split(',').map((tag: string) => tag.trim());
-        
-        for (const tagName of tagNames) {
-          const { data: tagData, error: tagError } = await supabase
-            .from('tags')
-            .upsert({ name: tagName })
-            .select()
-            .single();
-
-          if (!tagError && tagData) {
-            await supabase
-              .from('task_tags')
-              .insert({ task_id: editingTask.id, tag_id: tagData.id });
-          }
-        }
-      }
-
       const updatedTask: Task = {
         ...editingTask,
         title: data.title,
         description: data.description || "",
-        status: data.status as any,
+        status: data.status as "pending" | "in-progress" | "completed",
+        priority: data.priority as "low" | "medium" | "high",
         assignee: data.responsible || "",
         dueDate: data.deadline || "",
-        priority: data.priority as any,
         estimatedHours: Number(data.estimated_hours) || 0,
-        tags: taskData.tags ? taskData.tags.split(',').map((tag: string) => tag.trim()) : [],
+        tags: taskData.tags,
       };
 
       setTasks(tasks.map(task => task.id === editingTask.id ? updatedTask : task));
@@ -337,7 +265,7 @@ const ProjectTasks = ({ project }: ProjectTasksProps) => {
       case "in-progress":
         return <Clock className="h-4 w-4 text-blue-400" />;
       case "pending":
-        return <AlertCircle className="h-4 w-4 text-yellow-400" />;
+        return <AlertTriangle className="h-4 w-4 text-yellow-400" />;
     }
   };
 
@@ -382,7 +310,7 @@ const ProjectTasks = ({ project }: ProjectTasksProps) => {
   };
 
   const completedTasks = tasks.filter(task => task.status === "completed").length;
-  const progressPercentage = tasks.length > 0 ? (completedTasks / tasks.length) * 100 : 0;
+  const completionPercentage = tasks.length > 0 ? (completedTasks / tasks.length) * 100 : 0;
 
   if (loading) {
     return (
@@ -398,198 +326,108 @@ const ProjectTasks = ({ project }: ProjectTasksProps) => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-semibold">Gestión de Tareas</h3>
+          <h3 className="text-lg font-semibold">Tareas del Proyecto</h3>
           <p className="text-muted-foreground">
-            {completedTasks} de {tasks.length} tareas completadas ({progressPercentage.toFixed(0)}%)
+            {completedTasks} de {tasks.length} tareas completadas ({completionPercentage.toFixed(0)}%)
           </p>
         </div>
-        <div className="flex items-center gap-4">
-          <TaskViewControls viewType={viewType} onViewTypeChange={setViewType} />
-          <Button onClick={() => setIsFormOpen(true)}>
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Nueva Tarea
-          </Button>
-        </div>
+        <Button onClick={() => setIsFormOpen(true)}>
+          <PlusCircle className="mr-2 h-4 w-4" />
+          Nueva Tarea
+        </Button>
       </div>
 
-      {viewType === "list" ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>Lista de Tareas</CardTitle>
-            <CardDescription>
-              Gestiona todas las tareas del proyecto {project.name}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Estado</TableHead>
-                  <TableHead>Tarea</TableHead>
-                  <TableHead>Responsable</TableHead>
-                  <TableHead>Prioridad</TableHead>
-                  <TableHead>Fecha límite</TableHead>
-                  <TableHead>Acciones</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {tasks.map((task) => (
-                  <TableRow key={task.id}>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        {getStatusIcon(task.status)}
-                        {getStatusBadge(task.status)}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="cursor-pointer" onClick={() => handleTaskClick(task)}>
-                        <div className="font-medium">{task.title}</div>
-                        <div className="text-sm text-muted-foreground line-clamp-1">{task.description}</div>
-                      </div>
-                    </TableCell>
-                    <TableCell>{task.assignee}</TableCell>
-                    <TableCell>{getPriorityBadge(task.priority)}</TableCell>
-                    <TableCell>
-                      {task.dueDate ? new Date(task.dueDate).toLocaleDateString('es-ES') : "-"}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleEditTask(task);
-                          }}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteTask(task);
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      ) : (
-        <TaskColumnView
-          tasks={tasks}
-          viewType={viewType}
-          onTaskClick={handleTaskClick}
-          onEditTask={handleEditTask}
-          onDeleteTask={handleDeleteTask}
-        />
-      )}
-
-      {/* Task Details Dialog */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              {selectedTask && getStatusIcon(selectedTask.status)}
-              {selectedTask?.title}
-            </DialogTitle>
-            <DialogDescription>
-              Detalles completos de la tarea
-            </DialogDescription>
-          </DialogHeader>
+      <div className="grid gap-4 md:grid-cols-3">
+        {["pending", "in-progress", "completed"].map((status) => {
+          const statusTasks = tasks.filter(task => task.status === status);
           
-          {selectedTask && (
-            <div className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">Estado</label>
-                  <div className="mt-1">
-                    {getStatusBadge(selectedTask.status)}
-                  </div>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">Prioridad</label>
-                  <div className="mt-1">
-                    {getPriorityBadge(selectedTask.priority)}
-                  </div>
-                </div>
-              </div>
+          return (
+            <Card key={status}>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  {getStatusIcon(status as Task['status'])}
+                  {status === "pending" && "Pendientes"}
+                  {status === "in-progress" && "En Progreso"}
+                  {status === "completed" && "Completadas"}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{statusTasks.length}</div>
+                <p className="text-xs text-muted-foreground">
+                  {tasks.length > 0 ? ((statusTasks.length / tasks.length) * 100).toFixed(0) : 0}% del total
+                </p>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
 
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">Descripción</label>
-                <p className="mt-1 text-sm">{selectedTask.description}</p>
-              </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Lista de Tareas</CardTitle>
+          <CardDescription>
+            Gestiona todas las tareas del proyecto {project.name}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Estado</TableHead>
+                <TableHead>Tarea</TableHead>
+                <TableHead>Responsable</TableHead>
+                <TableHead>Prioridad</TableHead>
+                <TableHead>Fecha límite</TableHead>
+                <TableHead>Horas est.</TableHead>
+                <TableHead>Acciones</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {tasks.map((task) => (
+                <TableRow key={task.id}>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      {getStatusIcon(task.status)}
+                      {getStatusBadge(task.status)}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div>
+                      <div className="font-medium">{task.title}</div>
+                      <div className="text-sm text-muted-foreground">{task.description}</div>
+                    </div>
+                  </TableCell>
+                  <TableCell>{task.assignee}</TableCell>
+                  <TableCell>{getPriorityBadge(task.priority)}</TableCell>
+                  <TableCell>
+                    {task.dueDate ? new Date(task.dueDate).toLocaleDateString('es-ES') : "-"}
+                  </TableCell>
+                  <TableCell>{task.estimatedHours}h</TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleEditTask(task)}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDeleteTask(task)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">Responsable</label>
-                  <p className="mt-1 text-sm font-medium">{selectedTask.assignee}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">Fecha límite</label>
-                  <p className="mt-1 text-sm font-medium">
-                    {selectedTask.dueDate ? new Date(selectedTask.dueDate).toLocaleDateString('es-ES') : "-"}
-                  </p>
-                </div>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">Requisitos relacionados</label>
-                <div className="mt-2 space-y-1">
-                  {selectedTask.relatedRequirements.map((req, index) => (
-                    <Badge key={index} variant="secondary" className="mr-2 mb-1">
-                      {req}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">Horas estimadas</label>
-                  <p className="mt-1 text-sm font-medium">{selectedTask.estimatedHours}h</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">Horas completadas</label>
-                  <p className="mt-1 text-sm font-medium">{selectedTask.completedHours}h</p>
-                </div>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">
-                  Progreso ({selectedTask.estimatedHours > 0 ? ((selectedTask.completedHours / selectedTask.estimatedHours) * 100).toFixed(0) : 0}%)
-                </label>
-                <div className="mt-2 w-full bg-secondary rounded-full h-2">
-                  <div 
-                    className="bg-primary h-2 rounded-full transition-all" 
-                    style={{ width: `${selectedTask.estimatedHours > 0 ? (selectedTask.completedHours / selectedTask.estimatedHours) * 100 : 0}%` }}
-                  ></div>
-                </div>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">Etiquetas</label>
-                <div className="mt-2">
-                  {selectedTask.tags.map((tag, index) => (
-                    <Badge key={index} variant="outline" className="mr-2 mb-1">
-                      {tag}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Task Form Dialog */}
       <TaskForm
         isOpen={isFormOpen}
         onClose={() => {
@@ -597,14 +435,10 @@ const ProjectTasks = ({ project }: ProjectTasksProps) => {
           setEditingTask(null);
         }}
         onSubmit={editingTask ? handleUpdateTask : handleCreateTask}
-        initialData={editingTask ? {
-          ...editingTask,
-          tags: editingTask.tags.join(', ')
-        } : undefined}
+        initialData={editingTask || undefined}
         title={editingTask ? "Editar Tarea" : "Nueva Tarea"}
       />
 
-      {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>

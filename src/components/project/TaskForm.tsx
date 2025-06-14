@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -42,15 +42,41 @@ interface TaskFormProps {
 const TaskForm = ({ isOpen, onClose, onSubmit, initialData, title }: TaskFormProps) => {
   const { toast } = useToast();
   const [formData, setFormData] = useState<TaskFormData>({
-    title: initialData?.title || "",
-    description: initialData?.description || "",
-    status: initialData?.status || "pending",
-    assignee: initialData?.assignee || "",
-    dueDate: initialData?.dueDate || "",
-    priority: initialData?.priority || "medium",
-    estimatedHours: initialData?.estimatedHours || 0,
-    tags: initialData?.tags || "",
+    title: "",
+    description: "",
+    status: "pending",
+    assignee: "",
+    dueDate: "",
+    priority: "medium",
+    estimatedHours: 0,
+    tags: "",
   });
+
+  useEffect(() => {
+    if (initialData && isOpen) {
+      setFormData({
+        title: initialData.title || "",
+        description: initialData.description || "",
+        status: initialData.status || "pending",
+        assignee: initialData.assignee || "",
+        dueDate: initialData.dueDate || "",
+        priority: initialData.priority || "medium",
+        estimatedHours: initialData.estimatedHours || 0,
+        tags: initialData.tags || "",
+      });
+    } else if (!initialData && isOpen) {
+      setFormData({
+        title: "",
+        description: "",
+        status: "pending",
+        assignee: "",
+        dueDate: "",
+        priority: "medium",
+        estimatedHours: 0,
+        tags: "",
+      });
+    }
+  }, [initialData, isOpen]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

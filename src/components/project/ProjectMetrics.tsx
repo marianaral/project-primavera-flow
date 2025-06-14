@@ -1,15 +1,59 @@
 
+import { useState, useEffect } from "react";
 import { Project } from "@/data/projects";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from "recharts";
 import { Calendar, Clock, Target, TrendingUp, Users, CheckCircle } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ProjectMetricsProps {
   project: Project;
 }
 
 const ProjectMetrics = ({ project }: ProjectMetricsProps) => {
-  // Datos simulados para los gráficos
+  const [tasks, setTasks] = useState<any[]>([]);
+  const [expenses, setExpenses] = useState<any[]>([]);
+  const [requirements, setRequirements] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchProjectData();
+  }, [project.id]);
+
+  const fetchProjectData = async () => {
+    try {
+      const [tasksResponse, expensesResponse, requirementsResponse] = await Promise.all([
+        supabase.from('tasks').select('*').eq('project_id', project.id),
+        supabase.from('expenses').select('*').eq('project_id', project.id),
+        supabase.from('requirements').select('*').eq('project_id', project.id)
+      ]);
+
+      if (tasksResponse.error) console.error('Error fetching tasks:', tasksResponse.error);
+      if (expensesResponse.error) console.error('Error fetching expenses:', expensesResponse.error);
+      if (requirementsResponse.error) console.error('Error fetching requirements:', requirementsResponse.error);
+
+      setTasks(tasksResponse.data || []);
+      setExpenses(expensesResponse.data || []);
+      setRequirements(requirementsResponse.data || []);
+    } catch (error) {
+      console.error('Error fetching project data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Cálculos basados en datos reales
+  const completedTasks = tasks.filter(task => task.status === 'completed').length;
+  const inProgressTasks = tasks.filter(task => task.status === 'in-progress').length;
+  const pendingTasks = tasks.filter(task => task.status === 'pending').length;
+  
+  const totalExpenses = expenses.reduce((sum, expense) => sum + Number(expense.amount), 0);
+  const averageTaskTime = tasks.length > 0 ? (tasks.reduce((sum, task) => sum + (Number(task.estimated_hours) || 0), 0) / tasks.length) : 0;
+  
+  const approvedRequirements = requirements.filter(req => req.status === 'approved').length;
+  const efficiency = requirements.length > 0 ? (approvedRequirements / requirements.length) * 100 : 0;
+  
+  // Datos simulados para gráficos (se podrían calcular con fechas reales)
   const progressData = [
     { month: "Ene", planned: 20, actual: 15 },
     { month: "Feb", planned: 35, actual: 30 },
@@ -20,18 +64,18 @@ const ProjectMetrics = ({ project }: ProjectMetricsProps) => {
   ];
 
   const budgetData = [
-    { month: "Ene", budget: 8000, spent: 6500 },
-    { month: "Feb", budget: 16000, spent: 14200 },
-    { month: "Mar", budget: 24000, spent: 21800 },
-    { month: "Abr", budget: 32000, spent: 28900 },
-    { month: "May", budget: 40000, spent: 35600 },
-    { month: "Jun", budget: project.budget, spent: project.spent },
+    { month: "Ene", budget: project.budget * 0.16, spent: totalExpenses * 0.2 },
+    { month: "Feb", budget: project.budget * 0.32, spent: totalExpenses * 0.4 },
+    { month: "Mar", budget: project.budget * 0.48, spent: totalExpenses * 0.6 },
+    { month: "Abr", budget: project.budget * 0.64, spent: totalExpenses * 0.75 },
+    { month: "May", budget: project.budget * 0.8, spent: totalExpenses * 0.9 },
+    { month: "Jun", budget: project.budget, spent: totalExpenses },
   ];
 
   const taskDistribution = [
-    { name: "Completadas", value: 8, color: "#10b981" },
-    { name: "En Progreso", value: 3, color: "#3b82f6" },
-    { name: "Pendientes", value: 5, color: "#f59e0b" },
+    { name: "Completadas", value: completedTasks, color: "#10b981" },
+    { name: "En Progreso", value: inProgressTasks, color: "#3b82f6" },
+    { name: "Pendientes", value: pendingTasks, color: "#f59e0b" },
   ];
 
   const timeMetrics = [
@@ -40,6 +84,16 @@ const ProjectMetrics = ({ project }: ProjectMetricsProps) => {
     { category: "Desarrollo", estimated: 120, actual: 110 },
     { category: "Testing", estimated: 30, actual: 28 },
   ];
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-center items-center h-32">
+          <div className="text-muted-foreground">Cargando métricas...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -60,8 +114,8 @@ const ProjectMetrics = ({ project }: ProjectMetricsProps) => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">92%</div>
-            <p className="text-xs text-muted-foreground">Progreso vs planificado</p>
+            <div className="text-2xl font-bold">{efficiency.toFixed(0)}%</div>
+            <p className="text-xs text-muted-foreground">Requisitos aprobados</p>
           </CardContent>
         </Card>
 
@@ -73,8 +127,8 @@ const ProjectMetrics = ({ project }: ProjectMetricsProps) => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">5.2d</div>
-            <p className="text-xs text-muted-foreground">Por tarea completada</p>
+            <div className="text-2xl font-bold">{averageTaskTime.toFixed(1)}h</div>
+            <p className="text-xs text-muted-foreground">Por tarea estimada</p>
           </CardContent>
         </Card>
 
@@ -82,12 +136,12 @@ const ProjectMetrics = ({ project }: ProjectMetricsProps) => {
           <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center gap-2">
               <Users className="h-4 w-4" />
-              Productividad
+              Tareas
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">2.7</div>
-            <p className="text-xs text-muted-foreground">Tareas por semana</p>
+            <div className="text-2xl font-bold">{tasks.length}</div>
+            <p className="text-xs text-muted-foreground">Total registradas</p>
           </CardContent>
         </Card>
 
@@ -95,12 +149,14 @@ const ProjectMetrics = ({ project }: ProjectMetricsProps) => {
           <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center gap-2">
               <CheckCircle className="h-4 w-4" />
-              Calidad
+              Completadas
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">98%</div>
-            <p className="text-xs text-muted-foreground">Tareas sin retrabajos</p>
+            <div className="text-2xl font-bold">{completedTasks}</div>
+            <p className="text-xs text-muted-foreground">
+              {tasks.length > 0 ? ((completedTasks / tasks.length) * 100).toFixed(0) : 0}% del total
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -215,30 +271,30 @@ const ProjectMetrics = ({ project }: ProjectMetricsProps) => {
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Velocidad promedio:</span>
-                <span className="font-semibold">1.2% diario</span>
+                <span className="text-muted-foreground">Total gastos:</span>
+                <span className="font-semibold">${totalExpenses.toLocaleString()}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Estimación finalización:</span>
-                <span className="font-semibold">15 jul 2025</span>
+                <span className="text-muted-foreground">Presupuesto restante:</span>
+                <span className="font-semibold">${(project.budget - totalExpenses).toLocaleString()}</span>
               </div>
             </div>
             <div className="space-y-3">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">ROI proyectado:</span>
-                <span className="font-semibold text-green-400">+28%</span>
+                <span className="text-muted-foreground">Tareas completadas:</span>
+                <span className="font-semibold text-green-400">{completedTasks}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Riesgo presupuestario:</span>
-                <span className="font-semibold text-green-400">Bajo</span>
+                <span className="text-muted-foreground">Tareas en progreso:</span>
+                <span className="font-semibold text-blue-400">{inProgressTasks}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Satisfacción cliente:</span>
-                <span className="font-semibold">9.2/10</span>
+                <span className="text-muted-foreground">Tareas pendientes:</span>
+                <span className="font-semibold text-orange-400">{pendingTasks}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Calificación general:</span>
-                <span className="font-semibold text-green-400">Excelente</span>
+                <span className="text-muted-foreground">Requisitos aprobados:</span>
+                <span className="font-semibold text-green-400">{approvedRequirements}</span>
               </div>
             </div>
           </div>
