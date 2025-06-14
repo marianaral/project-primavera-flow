@@ -1,9 +1,10 @@
+
 import { useState, useEffect } from "react";
 import { Project } from "@/data/projects";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { PlusCircle, DollarSign, Edit, Trash2, CheckCircle, XCircle } from "lucide-react";
+import { PlusCircle, DollarSign, Edit, Trash2, CheckCircle, XCircle, Clock } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -32,7 +33,7 @@ interface Expense {
   amount: number;
   category: "personal" | "equipment" | "software" | "services" | "other";
   date: string;
-  approved: boolean;
+  status: "pending" | "approved" | "rejected";
   project_id?: string;
 }
 
@@ -76,7 +77,7 @@ const ProjectExpenses = ({ project }: ProjectExpensesProps) => {
         amount: Number(expense.amount),
         category: expense.category as "personal" | "equipment" | "software" | "services" | "other",
         date: expense.date,
-        approved: false, // TODO: Add approved field to schema
+        status: expense.status as "pending" | "approved" | "rejected",
         project_id: expense.project_id,
       })) || [];
 
@@ -102,6 +103,7 @@ const ProjectExpenses = ({ project }: ProjectExpensesProps) => {
           amount: expenseData.amount,
           category: expenseData.category,
           date: expenseData.date,
+          status: expenseData.status,
           project_id: project.id,
         }])
         .select()
@@ -123,7 +125,7 @@ const ProjectExpenses = ({ project }: ProjectExpensesProps) => {
         amount: Number(data.amount),
         category: data.category as "personal" | "equipment" | "software" | "services" | "other",
         date: data.date,
-        approved: expenseData.approved,
+        status: data.status as "pending" | "approved" | "rejected",
         project_id: data.project_id,
       };
 
@@ -158,6 +160,7 @@ const ProjectExpenses = ({ project }: ProjectExpensesProps) => {
           amount: expenseData.amount,
           category: expenseData.category,
           date: expenseData.date,
+          status: expenseData.status,
         })
         .eq('id', editingExpense.id)
         .select()
@@ -179,7 +182,7 @@ const ProjectExpenses = ({ project }: ProjectExpensesProps) => {
         amount: Number(data.amount),
         category: data.category as "personal" | "equipment" | "software" | "services" | "other",
         date: data.date,
-        approved: expenseData.approved,
+        status: data.status as "pending" | "approved" | "rejected",
       };
 
       setExpenses(expenses.map(exp => exp.id === editingExpense.id ? updatedExpense : exp));
@@ -264,9 +267,44 @@ const ProjectExpenses = ({ project }: ProjectExpensesProps) => {
     );
   };
 
+  const getStatusBadge = (status: Expense['status']) => {
+    const config = {
+      "pending": {
+        icon: Clock,
+        label: "Pendiente",
+        variant: "secondary" as const,
+        className: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30"
+      },
+      "approved": {
+        icon: CheckCircle,
+        label: "Aprobado",
+        variant: "default" as const,
+        className: "bg-green-500/20 text-green-400 border-green-500/30"
+      },
+      "rejected": {
+        icon: XCircle,
+        label: "Rechazado",
+        variant: "destructive" as const,
+        className: "bg-red-500/20 text-red-400 border-red-500/30"
+      }
+    };
+
+    const { icon: Icon, label, className } = config[status];
+
+    return (
+      <div className="flex items-center gap-2">
+        <Icon className="h-4 w-4" />
+        <Badge variant="outline" className={className}>
+          {label}
+        </Badge>
+      </div>
+    );
+  };
+
   const totalExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0);
-  const approvedExpenses = expenses.filter(exp => exp.approved).reduce((sum, exp) => sum + exp.amount, 0);
-  const pendingExpenses = expenses.filter(exp => !exp.approved).length;
+  const approvedExpenses = expenses.filter(exp => exp.status === "approved").reduce((sum, exp) => sum + exp.amount, 0);
+  const pendingExpenses = expenses.filter(exp => exp.status === "pending").length;
+  const rejectedExpenses = expenses.filter(exp => exp.status === "rejected").length;
 
   if (loading) {
     return (
@@ -284,7 +322,7 @@ const ProjectExpenses = ({ project }: ProjectExpensesProps) => {
         <div>
           <h3 className="text-lg font-semibold">Gastos del Proyecto</h3>
           <p className="text-muted-foreground">
-            Total gastado: ${totalExpenses.toLocaleString()} • {pendingExpenses} gastos pendientes
+            Total gastado: ${totalExpenses.toLocaleString()} • {pendingExpenses} pendientes • {rejectedExpenses} rechazados
           </p>
         </div>
         <Button onClick={() => setIsFormOpen(true)}>
@@ -319,7 +357,7 @@ const ProjectExpenses = ({ project }: ProjectExpensesProps) => {
           <CardContent>
             <div className="text-2xl font-bold">${approvedExpenses.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground">
-              {expenses.filter(exp => exp.approved).length} aprobados
+              {expenses.filter(exp => exp.status === "approved").length} aprobados
             </p>
           </CardContent>
         </Card>
@@ -327,7 +365,7 @@ const ProjectExpenses = ({ project }: ProjectExpensesProps) => {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center gap-2">
-              <XCircle className="h-4 w-4" />
+              <Clock className="h-4 w-4" />
               Pendientes
             </CardTitle>
           </CardHeader>
@@ -341,14 +379,15 @@ const ProjectExpenses = ({ project }: ProjectExpensesProps) => {
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Promedio</CardTitle>
+            <CardTitle className="text-sm flex items-center gap-2">
+              <XCircle className="h-4 w-4" />
+              Rechazados
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              ${expenses.length > 0 ? (totalExpenses / expenses.length).toFixed(0) : 0}
-            </div>
+            <div className="text-2xl font-bold">{rejectedExpenses}</div>
             <p className="text-xs text-muted-foreground">
-              Por gasto
+              Gastos rechazados
             </p>
           </CardContent>
         </Card>
@@ -377,16 +416,7 @@ const ProjectExpenses = ({ project }: ProjectExpensesProps) => {
               {expenses.map((expense) => (
                 <TableRow key={expense.id}>
                   <TableCell>
-                    <div className="flex items-center gap-2">
-                      {expense.approved ? (
-                        <CheckCircle className="h-4 w-4 text-green-400" />
-                      ) : (
-                        <XCircle className="h-4 w-4 text-orange-400" />
-                      )}
-                      <Badge variant={expense.approved ? "default" : "secondary"}>
-                        {expense.approved ? "Aprobado" : "Pendiente"}
-                      </Badge>
-                    </div>
+                    {getStatusBadge(expense.status)}
                   </TableCell>
                   <TableCell>
                     <div className="font-medium">{expense.description}</div>

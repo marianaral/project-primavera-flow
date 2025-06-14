@@ -25,7 +25,7 @@ interface ExpenseFormData {
   amount: number;
   category: "personal" | "equipment" | "software" | "services" | "other";
   date: string;
-  approved: boolean;
+  status: "pending" | "approved" | "rejected";
 }
 
 interface ExpenseFormProps {
@@ -43,7 +43,7 @@ const ExpenseForm = ({ isOpen, onClose, onSubmit, initialData, title }: ExpenseF
     amount: 0,
     category: "other",
     date: new Date().toISOString().split('T')[0],
-    approved: false,
+    status: "pending",
   });
 
   useEffect(() => {
@@ -54,7 +54,7 @@ const ExpenseForm = ({ isOpen, onClose, onSubmit, initialData, title }: ExpenseF
           amount: initialData.amount || 0,
           category: initialData.category || "other",
           date: initialData.date || new Date().toISOString().split('T')[0],
-          approved: initialData.approved || false,
+          status: initialData.status || "pending",
         });
       } else {
         setFormData({
@@ -62,7 +62,7 @@ const ExpenseForm = ({ isOpen, onClose, onSubmit, initialData, title }: ExpenseF
           amount: 0,
           category: "other",
           date: new Date().toISOString().split('T')[0],
-          approved: false,
+          status: "pending",
         });
       }
     }
@@ -132,20 +132,35 @@ const ExpenseForm = ({ isOpen, onClose, onSubmit, initialData, title }: ExpenseF
             </div>
           </div>
 
-          <div>
-            <Label htmlFor="category">Categoría</Label>
-            <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value as any })}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="personal">Personal</SelectItem>
-                <SelectItem value="equipment">Equipamiento</SelectItem>
-                <SelectItem value="software">Software</SelectItem>
-                <SelectItem value="services">Servicios</SelectItem>
-                <SelectItem value="other">Otros</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="category">Categoría</Label>
+              <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value as any })}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="personal">Personal</SelectItem>
+                  <SelectItem value="equipment">Equipamiento</SelectItem>
+                  <SelectItem value="software">Software</SelectItem>
+                  <SelectItem value="services">Servicios</SelectItem>
+                  <SelectItem value="other">Otros</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="status">Estado</Label>
+              <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value as any })}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pending">Pendiente</SelectItem>
+                  <SelectItem value="approved">Aprobado</SelectItem>
+                  <SelectItem value="rejected">Rechazado</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           <div className="flex justify-end gap-2 pt-4">
