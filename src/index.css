@@ -62,12 +62,16 @@
   /* Fix all Radix UI portals in dark mode */
   .dark [data-radix-portal] {
     color-scheme: dark;
+    background-color: hsl(var(--popover));
+    color: hsl(var(--popover-foreground));
   }
   
   /* Fix dialog content colors in dark mode */
   .dark [role="dialog"] {
     @apply bg-card text-card-foreground border-border;
     color-scheme: dark;
+    background-color: hsl(var(--card)) !important;
+    color: hsl(var(--card-foreground)) !important;
   }
   
   /* Fix form elements in dark mode */
@@ -76,6 +80,8 @@
   .dark select {
     @apply bg-input text-foreground border-border;
     color-scheme: dark;
+    background-color: hsl(var(--input)) !important;
+    color: hsl(var(--foreground)) !important;
   }
   
   /* Fix all dropdown and select content in dark mode */
@@ -84,11 +90,14 @@
   .dark [data-radix-popover-content] {
     @apply bg-popover text-popover-foreground border-border;
     color-scheme: dark;
+    background-color: hsl(var(--popover)) !important;
+    color: hsl(var(--popover-foreground)) !important;
   }
   
   /* Fix labels in dark mode */
   .dark label {
     @apply text-foreground;
+    color: hsl(var(--foreground)) !important;
   }
   
   /* Fix all Radix components in dark mode */
@@ -96,6 +105,14 @@
   .dark [data-radix-select-item],
   .dark [data-radix-dropdown-menu-item] {
     @apply text-foreground;
+    color: hsl(var(--foreground)) !important;
+  }
+  
+  /* Fix select trigger in dark mode */
+  .dark [data-radix-select-trigger] {
+    @apply bg-input text-foreground border-border;
+    background-color: hsl(var(--input)) !important;
+    color: hsl(var(--foreground)) !important;
   }
   
   /* Ensure all modal overlays work properly in dark mode */
@@ -104,31 +121,70 @@
     background-color: rgba(0, 0, 0, 0.8);
   }
 
-  /* Fix all icons and text in dark mode */
+  /* Fix all icons and text in dark mode - more specific targeting */
   .dark svg {
-    @apply text-foreground;
+    color: hsl(var(--foreground)) !important;
   }
 
   /* Ensure buttons have proper icon colors in dark mode */
   .dark button svg {
-    @apply text-foreground;
+    color: hsl(var(--foreground)) !important;
   }
 
   /* Fix select trigger icons and text */
-  .dark [data-radix-select-trigger] {
-    @apply text-foreground;
-  }
-
   .dark [data-radix-select-trigger] svg {
-    @apply text-foreground;
+    color: hsl(var(--foreground)) !important;
   }
 
   /* Fix hover buttons and their icons */
   .dark .group:hover button {
-    @apply text-foreground;
+    color: hsl(var(--foreground)) !important;
   }
 
   .dark .group:hover button svg {
-    @apply text-foreground;
+    color: hsl(var(--foreground)) !important;
+  }
+
+  /* Fix filter icon and text specifically */
+  .dark button[aria-haspopup="listbox"] {
+    background-color: hsl(var(--input)) !important;
+    color: hsl(var(--foreground)) !important;
+  }
+
+  .dark button[aria-haspopup="listbox"] svg {
+    color: hsl(var(--foreground)) !important;
+  }
+
+  /* Fix all dialog and form elements */
+  .dark [data-radix-dialog-content] * {
+    color: hsl(var(--card-foreground)) !important;
+  }
+
+  .dark [data-radix-dialog-content] input,
+  .dark [data-radix-dialog-content] textarea,
+  .dark [data-radix-dialog-content] select {
+    background-color: hsl(var(--input)) !important;
+    color: hsl(var(--foreground)) !important;
+    border-color: hsl(var(--border)) !important;
+  }
+
+  .dark [data-radix-dialog-content] label {
+    color: hsl(var(--foreground)) !important;
+  }
+
+  /* Fix toggle/switch components */
+  .dark [data-radix-switch-root] {
+    background-color: hsl(var(--input)) !important;
+  }
+
+  .dark [data-radix-switch-root][data-state="checked"] {
+    background-color: hsl(var(--primary)) !important;
+  }
+
+  /* Fix all text elements in dark mode */
+  .dark span,
+  .dark p,
+  .dark div {
+    color: inherit;
   }
 }
