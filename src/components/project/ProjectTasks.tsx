@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Project } from "@/data/projects";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -33,6 +33,7 @@ import TaskForm from "./TaskForm";
 import TaskViewControls, { TaskViewType } from "./TaskViewControls";
 import TaskColumnView from "./TaskColumnView";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Task {
   id: string;
@@ -46,6 +47,7 @@ interface Task {
   estimatedHours: number;
   completedHours: number;
   tags: string[];
+  project_id?: string;
 }
 
 interface ProjectTasksProps {
@@ -61,76 +63,146 @@ const ProjectTasks = ({ project }: ProjectTasksProps) => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
   const [viewType, setViewType] = useState<TaskViewType>("list");
-  
-  const [tasks, setTasks] = useState<Task[]>([
-    {
-      id: "task-1",
-      title: "Análisis de requisitos",
-      description: "Definir los requisitos funcionales y no funcionales del proyecto. Esto incluye reuniones con stakeholders, documentación detallada y validación de necesidades del negocio.",
-      status: "completed",
-      assignee: "María García",
-      dueDate: "2025-06-20",
-      priority: "high",
-      relatedRequirements: ["REQ-001: Autenticación de usuarios", "REQ-002: Dashboard principal"],
-      estimatedHours: 40,
-      completedHours: 38,
-      tags: ["análisis", "documentación", "stakeholders"]
-    },
-    {
-      id: "task-2",
-      title: "Diseño de arquitectura",
-      description: "Crear el diseño técnico y la arquitectura del sistema",
-      status: "in-progress",
-      assignee: "Carlos López",
-      dueDate: "2025-06-25",
-      priority: "high",
-      relatedRequirements: ["REQ-003: Base de datos", "REQ-004: API REST"],
-      estimatedHours: 60,
-      completedHours: 25,
-      tags: ["arquitectura", "diseño", "backend"]
-    },
-    {
-      id: "task-3",
-      title: "Desarrollo frontend",
-      description: "Implementar la interfaz de usuario",
-      status: "pending",
-      assignee: "Ana Martín",
-      dueDate: "2025-07-10",
-      priority: "medium",
-      relatedRequirements: ["REQ-005: Interfaz responsive", "REQ-006: Componentes UI"],
-      estimatedHours: 80,
-      completedHours: 0,
-      tags: ["frontend", "ui", "react"]
-    },
-    {
-      id: "task-4",
-      title: "Testing e integración",
-      description: "Realizar pruebas unitarias y de integración",
-      status: "pending",
-      assignee: "Luis Rodríguez",
-      dueDate: "2025-07-20",
-      priority: "medium",
-      relatedRequirements: ["REQ-007: Pruebas automatizadas"],
-      estimatedHours: 30,
-      completedHours: 0,
-      tags: ["testing", "qa", "automatización"]
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchTasks();
+  }, [project.id]);
+
+  const fetchTasks = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('tasks')
+        .select(`
+          *,
+          task_tags (
+            tags (
+              name
+            )
+          )
+        `)
+        .eq('project_id', project.id);
+
+      if (error) {
+        console.error('Error fetching tasks:', error);
+        toast({
+          title: "Error",
+          description: "No se pudieron cargar las tareas",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const formattedTasks = data?.map(task => ({
+        id: task.id,
+        title: task.title,
+        description: task.description || "",
+        status: task.status === "pending" ? "pending" : task.status === "in-progress" ? "in-progress" : "completed",
+        assignee: task.responsible || "",
+        dueDate: task.deadline || "",
+        priority: task.priority as "low" | "medium" | "high",
+        relatedRequirements: [],
+        estimatedHours: Number(task.estimated_hours) || 0,
+        completedHours: 0,
+        tags: task.task_tags?.map((tt: any) => tt.tags.name) || [],
+        project_id: task.project_id,
+      })) || [];
+
+      setTasks(formattedTasks);
+    } catch (error) {
+      console.error('Error:', error);
+      toast({
+        title: "Error",
+        description: "Ocurrió un error al cargar las tareas",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
-  ]);
+  };
 
   const handleTaskClick = (task: Task) => {
     setSelectedTask(task);
     setIsDialogOpen(true);
   };
 
-  const handleCreateTask = (taskData: any) => {
-    const newTask: Task = {
-      id: `task-${Date.now()}`,
-      ...taskData,
-      relatedRequirements: [],
-      completedHours: 0,
-      tags: taskData.tags ? taskData.tags.split(',').map((tag: string) => tag.trim()) : [],
-    };
-    setTasks([...tasks, newTask]);
+  const handleCreateTask = async (taskData: any) => {
+    try {
+      const { data, error } = await supabase
+        .from('tasks')
+        .insert([{
+          title: taskData.title,
+          description: taskData.description,
+          status: taskData.status,
+          responsible: taskData.assignee,
+          deadline: taskData.dueDate || null,
+          priority: taskData.priority,
+          estimated_hours: taskData.estimatedHours || null,
+          project_id: project.id,
+        }])
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error creating task:', error);
+        toast({
+          title: "Error",
+          description: "No se pudo crear la tarea",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Handle tags if provided
+      if (taskData.tags && taskData.tags.trim()) {
+        const tagNames = taskData.tags.split(',').map((tag: string) => tag.trim());
+        
+        for (const tagName of tagNames) {
+          // Insert or get tag
+          const { data: tagData, error: tagError } = await supabase
+            .from('tags')
+            .upsert({ name: tagName })
+            .select()
+            .single();
+
+          if (!tagError && tagData) {
+            // Link tag to task
+            await supabase
+              .from('task_tags')
+              .insert({ task_id: data.id, tag_id: tagData.id });
+          }
+        }
+      }
+
+      const newTask: Task = {
+        id: data.id,
+        title: data.title,
+        description: data.description || "",
+        status: data.status as any,
+        assignee: data.responsible || "",
+        dueDate: data.deadline || "",
+        priority: data.priority as any,
+        relatedRequirements: [],
+        estimatedHours: Number(data.estimated_hours) || 0,
+        completedHours: 0,
+        tags: taskData.tags ? taskData.tags.split(',').map((tag: string) => tag.trim()) : [],
+        project_id: data.project_id,
+      };
+
+      setTasks([...tasks, newTask]);
+      toast({
+        title: "Tarea creada",
+        description: "La tarea ha sido creada correctamente",
+      });
+    } catch (error) {
+      console.error('Error:', error);
+      toast({
+        title: "Error",
+        description: "Ocurrió un error al crear la tarea",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleEditTask = (task: Task) => {
@@ -138,17 +210,82 @@ const ProjectTasks = ({ project }: ProjectTasksProps) => {
     setIsFormOpen(true);
   };
 
-  const handleUpdateTask = (taskData: any) => {
+  const handleUpdateTask = async (taskData: any) => {
     if (!editingTask) return;
     
-    const updatedTask: Task = {
-      ...editingTask,
-      ...taskData,
-      tags: taskData.tags ? taskData.tags.split(',').map((tag: string) => tag.trim()) : [],
-    };
-    
-    setTasks(tasks.map(task => task.id === editingTask.id ? updatedTask : task));
-    setEditingTask(null);
+    try {
+      const { data, error } = await supabase
+        .from('tasks')
+        .update({
+          title: taskData.title,
+          description: taskData.description,
+          status: taskData.status,
+          responsible: taskData.assignee,
+          deadline: taskData.dueDate || null,
+          priority: taskData.priority,
+          estimated_hours: taskData.estimatedHours || null,
+        })
+        .eq('id', editingTask.id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error updating task:', error);
+        toast({
+          title: "Error",
+          description: "No se pudo actualizar la tarea",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Update tags
+      await supabase.from('task_tags').delete().eq('task_id', editingTask.id);
+      
+      if (taskData.tags && taskData.tags.trim()) {
+        const tagNames = taskData.tags.split(',').map((tag: string) => tag.trim());
+        
+        for (const tagName of tagNames) {
+          const { data: tagData, error: tagError } = await supabase
+            .from('tags')
+            .upsert({ name: tagName })
+            .select()
+            .single();
+
+          if (!tagError && tagData) {
+            await supabase
+              .from('task_tags')
+              .insert({ task_id: editingTask.id, tag_id: tagData.id });
+          }
+        }
+      }
+
+      const updatedTask: Task = {
+        ...editingTask,
+        title: data.title,
+        description: data.description || "",
+        status: data.status as any,
+        assignee: data.responsible || "",
+        dueDate: data.deadline || "",
+        priority: data.priority as any,
+        estimatedHours: Number(data.estimated_hours) || 0,
+        tags: taskData.tags ? taskData.tags.split(',').map((tag: string) => tag.trim()) : [],
+      };
+
+      setTasks(tasks.map(task => task.id === editingTask.id ? updatedTask : task));
+      setEditingTask(null);
+      toast({
+        title: "Tarea actualizada",
+        description: "La tarea ha sido actualizada correctamente",
+      });
+    } catch (error) {
+      console.error('Error:', error);
+      toast({
+        title: "Error",
+        description: "Ocurrió un error al actualizar la tarea",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleDeleteTask = (task: Task) => {
@@ -156,14 +293,39 @@ const ProjectTasks = ({ project }: ProjectTasksProps) => {
     setDeleteDialogOpen(true);
   };
 
-  const confirmDeleteTask = () => {
-    if (taskToDelete) {
+  const confirmDeleteTask = async () => {
+    if (!taskToDelete) return;
+
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .delete()
+        .eq('id', taskToDelete.id);
+
+      if (error) {
+        console.error('Error deleting task:', error);
+        toast({
+          title: "Error",
+          description: "No se pudo eliminar la tarea",
+          variant: "destructive",
+        });
+        return;
+      }
+
       setTasks(tasks.filter(task => task.id !== taskToDelete.id));
       toast({
         title: "Tarea eliminada",
         description: "La tarea ha sido eliminada correctamente",
       });
+    } catch (error) {
+      console.error('Error:', error);
+      toast({
+        title: "Error",
+        description: "Ocurrió un error al eliminar la tarea",
+        variant: "destructive",
+      });
     }
+
     setDeleteDialogOpen(false);
     setTaskToDelete(null);
   };
@@ -220,7 +382,17 @@ const ProjectTasks = ({ project }: ProjectTasksProps) => {
   };
 
   const completedTasks = tasks.filter(task => task.status === "completed").length;
-  const progressPercentage = (completedTasks / tasks.length) * 100;
+  const progressPercentage = tasks.length > 0 ? (completedTasks / tasks.length) * 100 : 0;
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-center items-center h-32">
+          <div className="text-muted-foreground">Cargando tareas...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -278,7 +450,7 @@ const ProjectTasks = ({ project }: ProjectTasksProps) => {
                     <TableCell>{task.assignee}</TableCell>
                     <TableCell>{getPriorityBadge(task.priority)}</TableCell>
                     <TableCell>
-                      {new Date(task.dueDate).toLocaleDateString('es-ES')}
+                      {task.dueDate ? new Date(task.dueDate).toLocaleDateString('es-ES') : "-"}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
@@ -363,7 +535,7 @@ const ProjectTasks = ({ project }: ProjectTasksProps) => {
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Fecha límite</label>
                   <p className="mt-1 text-sm font-medium">
-                    {new Date(selectedTask.dueDate).toLocaleDateString('es-ES')}
+                    {selectedTask.dueDate ? new Date(selectedTask.dueDate).toLocaleDateString('es-ES') : "-"}
                   </p>
                 </div>
               </div>
@@ -392,12 +564,12 @@ const ProjectTasks = ({ project }: ProjectTasksProps) => {
 
               <div>
                 <label className="text-sm font-medium text-muted-foreground">
-                  Progreso ({((selectedTask.completedHours / selectedTask.estimatedHours) * 100).toFixed(0)}%)
+                  Progreso ({selectedTask.estimatedHours > 0 ? ((selectedTask.completedHours / selectedTask.estimatedHours) * 100).toFixed(0) : 0}%)
                 </label>
                 <div className="mt-2 w-full bg-secondary rounded-full h-2">
                   <div 
                     className="bg-primary h-2 rounded-full transition-all" 
-                    style={{ width: `${(selectedTask.completedHours / selectedTask.estimatedHours) * 100}%` }}
+                    style={{ width: `${selectedTask.estimatedHours > 0 ? (selectedTask.completedHours / selectedTask.estimatedHours) * 100 : 0}%` }}
                   ></div>
                 </div>
               </div>

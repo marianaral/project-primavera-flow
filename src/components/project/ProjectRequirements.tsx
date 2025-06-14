@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Project } from "@/data/projects";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import RequirementForm from "./RequirementForm";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Requirement {
   id: string;
@@ -33,6 +34,7 @@ interface Requirement {
   status: "pending" | "in-review" | "approved" | "rejected";
   priority: "low" | "medium" | "high" | "critical";
   dueDate: string;
+  project_id?: string;
 }
 
 interface ProjectRequirementsProps {
@@ -45,52 +47,104 @@ const ProjectRequirements = ({ project }: ProjectRequirementsProps) => {
   const [editingRequirement, setEditingRequirement] = useState<Requirement | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [requirementToDelete, setRequirementToDelete] = useState<Requirement | null>(null);
-  
-  const [requirements, setRequirements] = useState<Requirement[]>([
-    {
-      id: "req-1",
-      title: "Autenticación de usuarios",
-      description: "El sistema debe permitir login seguro con email y contraseña",
-      type: "functional",
-      status: "approved",
-      priority: "critical",
-      dueDate: "2025-06-18"
-    },
-    {
-      id: "req-2",
-      title: "Compatibilidad GDPR",
-      description: "Cumplimiento con regulaciones de protección de datos",
-      type: "legal",
-      status: "in-review",
-      priority: "high",
-      dueDate: "2025-06-25"
-    },
-    {
-      id: "req-3",
-      title: "Escalabilidad horizontal",
-      description: "La arquitectura debe soportar escalado horizontal",
-      type: "technical",
-      status: "pending",
-      priority: "medium",
-      dueDate: "2025-07-01"
-    },
-    {
-      id: "req-4",
-      title: "Dashboard analítico",
-      description: "Interfaz para visualizar métricas de negocio",
-      type: "business",
-      status: "approved",
-      priority: "high",
-      dueDate: "2025-07-15"
-    }
-  ]);
+  const [requirements, setRequirements] = useState<Requirement[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleCreateRequirement = (requirementData: any) => {
-    const newRequirement: Requirement = {
-      id: `req-${Date.now()}`,
-      ...requirementData,
-    };
-    setRequirements([...requirements, newRequirement]);
+  useEffect(() => {
+    fetchRequirements();
+  }, [project.id]);
+
+  const fetchRequirements = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('requirements')
+        .select('*')
+        .eq('project_id', project.id);
+
+      if (error) {
+        console.error('Error fetching requirements:', error);
+        toast({
+          title: "Error",
+          description: "No se pudieron cargar los requisitos",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const formattedRequirements = data?.map(req => ({
+        id: req.id,
+        title: req.title,
+        description: req.description || "",
+        type: req.type as "functional" | "technical" | "legal" | "business",
+        status: req.status as "pending" | "in-review" | "approved" | "rejected",
+        priority: req.priority as "low" | "medium" | "high" | "critical",
+        dueDate: req.deadline || "",
+        project_id: req.project_id,
+      })) || [];
+
+      setRequirements(formattedRequirements);
+    } catch (error) {
+      console.error('Error:', error);
+      toast({
+        title: "Error",
+        description: "Ocurrió un error al cargar los requisitos",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCreateRequirement = async (requirementData: any) => {
+    try {
+      const { data, error } = await supabase
+        .from('requirements')
+        .insert([{
+          title: requirementData.title,
+          description: requirementData.description,
+          type: requirementData.type,
+          status: requirementData.status,
+          priority: requirementData.priority,
+          deadline: requirementData.dueDate || null,
+          project_id: project.id,
+        }])
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error creating requirement:', error);
+        toast({
+          title: "Error",
+          description: "No se pudo crear el requisito",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const newRequirement: Requirement = {
+        id: data.id,
+        title: data.title,
+        description: data.description || "",
+        type: data.type,
+        status: data.status,
+        priority: data.priority,
+        dueDate: data.deadline || "",
+        project_id: data.project_id,
+      };
+
+      setRequirements([...requirements, newRequirement]);
+      toast({
+        title: "Requisito creado",
+        description: "El requisito ha sido creado correctamente",
+      });
+    } catch (error) {
+      console.error('Error:', error);
+      toast({
+        title: "Error",
+        description: "Ocurrió un error al crear el requisito",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleEditRequirement = (requirement: Requirement) => {
@@ -98,16 +152,58 @@ const ProjectRequirements = ({ project }: ProjectRequirementsProps) => {
     setIsFormOpen(true);
   };
 
-  const handleUpdateRequirement = (requirementData: any) => {
+  const handleUpdateRequirement = async (requirementData: any) => {
     if (!editingRequirement) return;
     
-    const updatedRequirement: Requirement = {
-      ...editingRequirement,
-      ...requirementData,
-    };
-    
-    setRequirements(requirements.map(req => req.id === editingRequirement.id ? updatedRequirement : req));
-    setEditingRequirement(null);
+    try {
+      const { data, error } = await supabase
+        .from('requirements')
+        .update({
+          title: requirementData.title,
+          description: requirementData.description,
+          type: requirementData.type,
+          status: requirementData.status,
+          priority: requirementData.priority,
+          deadline: requirementData.dueDate || null,
+        })
+        .eq('id', editingRequirement.id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error updating requirement:', error);
+        toast({
+          title: "Error",
+          description: "No se pudo actualizar el requisito",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const updatedRequirement: Requirement = {
+        ...editingRequirement,
+        title: data.title,
+        description: data.description || "",
+        type: data.type,
+        status: data.status,
+        priority: data.priority,
+        dueDate: data.deadline || "",
+      };
+
+      setRequirements(requirements.map(req => req.id === editingRequirement.id ? updatedRequirement : req));
+      setEditingRequirement(null);
+      toast({
+        title: "Requisito actualizado",
+        description: "El requisito ha sido actualizado correctamente",
+      });
+    } catch (error) {
+      console.error('Error:', error);
+      toast({
+        title: "Error",
+        description: "Ocurrió un error al actualizar el requisito",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleDeleteRequirement = (requirement: Requirement) => {
@@ -115,14 +211,39 @@ const ProjectRequirements = ({ project }: ProjectRequirementsProps) => {
     setDeleteDialogOpen(true);
   };
 
-  const confirmDeleteRequirement = () => {
-    if (requirementToDelete) {
+  const confirmDeleteRequirement = async () => {
+    if (!requirementToDelete) return;
+
+    try {
+      const { error } = await supabase
+        .from('requirements')
+        .delete()
+        .eq('id', requirementToDelete.id);
+
+      if (error) {
+        console.error('Error deleting requirement:', error);
+        toast({
+          title: "Error",
+          description: "No se pudo eliminar el requisito",
+          variant: "destructive",
+        });
+        return;
+      }
+
       setRequirements(requirements.filter(req => req.id !== requirementToDelete.id));
       toast({
         title: "Requisito eliminado",
         description: "El requisito ha sido eliminado correctamente",
       });
+    } catch (error) {
+      console.error('Error:', error);
+      toast({
+        title: "Error",
+        description: "Ocurrió un error al eliminar el requisito",
+        variant: "destructive",
+      });
     }
+
     setDeleteDialogOpen(false);
     setRequirementToDelete(null);
   };
@@ -207,7 +328,17 @@ const ProjectRequirements = ({ project }: ProjectRequirementsProps) => {
   };
 
   const approvedReqs = requirements.filter(req => req.status === "approved").length;
-  const completionPercentage = (approvedReqs / requirements.length) * 100;
+  const completionPercentage = requirements.length > 0 ? (approvedReqs / requirements.length) * 100 : 0;
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-center items-center h-32">
+          <div className="text-muted-foreground">Cargando requisitos...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -288,7 +419,7 @@ const ProjectRequirements = ({ project }: ProjectRequirementsProps) => {
                   <TableCell>{getTypeBadge(requirement.type)}</TableCell>
                   <TableCell>{getPriorityBadge(requirement.priority)}</TableCell>
                   <TableCell>
-                    {new Date(requirement.dueDate).toLocaleDateString('es-ES')}
+                    {requirement.dueDate ? new Date(requirement.dueDate).toLocaleDateString('es-ES') : "-"}
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">

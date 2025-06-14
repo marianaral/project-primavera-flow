@@ -9,6 +9,7 @@ import ProjectTasks from "@/components/project/ProjectTasks";
 import ProjectRequirements from "@/components/project/ProjectRequirements";
 import ProjectFinances from "@/components/project/ProjectFinances";
 import ProjectMetrics from "@/components/project/ProjectMetrics";
+import ProjectExpenses from "@/components/project/ProjectExpenses";
 
 const ProjectPage = () => {
   const { id } = useParams();
@@ -40,10 +41,11 @@ const ProjectPage = () => {
       </div>
 
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="overview">Información</TabsTrigger>
           <TabsTrigger value="tasks">Tareas</TabsTrigger>
           <TabsTrigger value="requirements">Requisitos</TabsTrigger>
+          <TabsTrigger value="expenses">Gastos</TabsTrigger>
           <TabsTrigger value="finances">Finanzas</TabsTrigger>
           <TabsTrigger value="metrics">Métricas</TabsTrigger>
         </TabsList>
@@ -58,6 +60,10 @@ const ProjectPage = () => {
         
         <TabsContent value="requirements" className="mt-6">
           <ProjectRequirements project={project} />
+        </TabsContent>
+        
+        <TabsContent value="expenses" className="mt-6">
+          <ProjectExpenses project={project} />
         </TabsContent>
         
         <TabsContent value="finances" className="mt-6">
