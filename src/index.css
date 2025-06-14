@@ -32,7 +32,7 @@
     --foreground: 210 40% 98%;
     --card: 224 71% 8%;
     --card-foreground: 210 40% 98%;
-    --popover: 224 71% 4%;
+    --popover: 224 71% 8%;
     --popover-foreground: 210 40% 98%;
     --primary: 217.2 91.2% 59.8%;
     --primary-foreground: 210 40% 98%;
@@ -59,14 +59,15 @@
     font-family: 'Inter', sans-serif;
   }
   
-  /* Ensure dialogs and popovers use proper theme colors */
-  [data-radix-portal] {
-    @apply text-foreground;
+  /* Fix all Radix UI portals in dark mode */
+  .dark [data-radix-portal] {
+    color-scheme: dark;
   }
   
   /* Fix dialog content colors in dark mode */
   .dark [role="dialog"] {
     @apply bg-card text-card-foreground border-border;
+    color-scheme: dark;
   }
   
   /* Fix form elements in dark mode */
@@ -74,11 +75,32 @@
   .dark textarea,
   .dark select {
     @apply bg-input text-foreground border-border;
+    color-scheme: dark;
   }
   
-  /* Fix dropdown and select content */
+  /* Fix all dropdown and select content in dark mode */
   .dark [data-radix-select-content],
-  .dark [data-radix-dropdown-menu-content] {
+  .dark [data-radix-dropdown-menu-content],
+  .dark [data-radix-popover-content] {
     @apply bg-popover text-popover-foreground border-border;
+    color-scheme: dark;
+  }
+  
+  /* Fix labels in dark mode */
+  .dark label {
+    @apply text-foreground;
+  }
+  
+  /* Fix all Radix components in dark mode */
+  .dark [data-radix-collection-item],
+  .dark [data-radix-select-item],
+  .dark [data-radix-dropdown-menu-item] {
+    @apply text-foreground;
+  }
+  
+  /* Ensure all modal overlays work properly in dark mode */
+  .dark [data-radix-dialog-overlay],
+  .dark [data-radix-alert-dialog-overlay] {
+    background-color: rgba(0, 0, 0, 0.8);
   }
 }

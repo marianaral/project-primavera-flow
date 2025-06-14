@@ -1,3 +1,4 @@
+
 import { useState, useMemo } from "react";
 import { projects, ProjectStatus } from "@/data/projects";
 import ProjectCard from "@/components/ProjectCard";
@@ -120,7 +121,7 @@ const Projects = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Proyectos</h1>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">Proyectos</h1>
           <p className="text-muted-foreground">Gestiona todos tus proyectos desde aquí</p>
         </div>
         <Button onClick={() => setIsProjectFormOpen(true)}>
@@ -133,7 +134,7 @@ const Projects = () => {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <div className="bg-card rounded-lg border p-4">
           <div className="text-sm text-muted-foreground">Total de Proyectos</div>
-          <div className="text-2xl font-bold">{kpis.totalProjects}</div>
+          <div className="text-2xl font-bold text-foreground">{kpis.totalProjects}</div>
         </div>
         <div className="bg-card rounded-lg border p-4">
           <div className="text-sm text-muted-foreground">Proyectos Activos</div>
@@ -145,7 +146,7 @@ const Projects = () => {
         </div>
         <div className="bg-card rounded-lg border p-4">
           <div className="text-sm text-muted-foreground">Utilización Presupuesto</div>
-          <div className="text-2xl font-bold">
+          <div className="text-2xl font-bold text-foreground">
             {kpis.budgetUtilization.toFixed(1)}%
           </div>
           <div className="text-xs text-muted-foreground">
@@ -188,7 +189,7 @@ const Projects = () => {
       {/* Resultados */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">
+          <h2 className="text-lg font-semibold text-foreground">
             {filteredProjects.length === projectList.length 
               ? `Todos los proyectos (${projectList.length})`
               : `${filteredProjects.length} de ${projectList.length} proyectos`
