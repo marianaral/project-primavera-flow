@@ -15,6 +15,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface Task {
   id: string;
@@ -24,6 +31,10 @@ interface Task {
   assignee: string;
   dueDate: string;
   priority: "low" | "medium" | "high";
+  relatedRequirements: string[];
+  estimatedHours: number;
+  completedHours: number;
+  tags: string[];
 }
 
 interface ProjectTasksProps {
@@ -31,15 +42,22 @@ interface ProjectTasksProps {
 }
 
 const ProjectTasks = ({ project }: ProjectTasksProps) => {
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  
   const [tasks] = useState<Task[]>([
     {
       id: "task-1",
       title: "Análisis de requisitos",
-      description: "Definir los requisitos funcionales y no funcionales del proyecto",
+      description: "Definir los requisitos funcionales y no funcionales del proyecto. Esto incluye reuniones con stakeholders, documentación detallada y validación de necesidades del negocio.",
       status: "completed",
       assignee: "María García",
       dueDate: "2025-06-20",
-      priority: "high"
+      priority: "high",
+      relatedRequirements: ["REQ-001: Autenticación de usuarios", "REQ-002: Dashboard principal"],
+      estimatedHours: 40,
+      completedHours: 38,
+      tags: ["análisis", "documentación", "stakeholders"]
     },
     {
       id: "task-2",
@@ -48,7 +66,11 @@ const ProjectTasks = ({ project }: ProjectTasksProps) => {
       status: "in-progress",
       assignee: "Carlos López",
       dueDate: "2025-06-25",
-      priority: "high"
+      priority: "high",
+      relatedRequirements: ["REQ-003: Base de datos", "REQ-004: API REST"],
+      estimatedHours: 60,
+      completedHours: 25,
+      tags: ["arquitectura", "diseño", "backend"]
     },
     {
       id: "task-3",
@@ -57,7 +79,11 @@ const ProjectTasks = ({ project }: ProjectTasksProps) => {
       status: "pending",
       assignee: "Ana Martín",
       dueDate: "2025-07-10",
-      priority: "medium"
+      priority: "medium",
+      relatedRequirements: ["REQ-005: Interfaz responsive", "REQ-006: Componentes UI"],
+      estimatedHours: 80,
+      completedHours: 0,
+      tags: ["frontend", "ui", "react"]
     },
     {
       id: "task-4",
@@ -66,9 +92,18 @@ const ProjectTasks = ({ project }: ProjectTasksProps) => {
       status: "pending",
       assignee: "Luis Rodríguez",
       dueDate: "2025-07-20",
-      priority: "medium"
+      priority: "medium",
+      relatedRequirements: ["REQ-007: Pruebas automatizadas"],
+      estimatedHours: 30,
+      completedHours: 0,
+      tags: ["testing", "qa", "automatización"]
     }
   ]);
+
+  const handleTaskClick = (task: Task) => {
+    setSelectedTask(task);
+    setIsDialogOpen(true);
+  };
 
   const getStatusIcon = (status: Task['status']) => {
     switch (status) {
@@ -159,7 +194,11 @@ const ProjectTasks = ({ project }: ProjectTasksProps) => {
             </TableHeader>
             <TableBody>
               {tasks.map((task) => (
-                <TableRow key={task.id}>
+                <TableRow 
+                  key={task.id} 
+                  className="cursor-pointer hover:bg-muted/50"
+                  onClick={() => handleTaskClick(task)}
+                >
                   <TableCell>
                     <div className="flex items-center gap-2">
                       {getStatusIcon(task.status)}
@@ -169,7 +208,7 @@ const ProjectTasks = ({ project }: ProjectTasksProps) => {
                   <TableCell>
                     <div>
                       <div className="font-medium">{task.title}</div>
-                      <div className="text-sm text-muted-foreground">{task.description}</div>
+                      <div className="text-sm text-muted-foreground line-clamp-1">{task.description}</div>
                     </div>
                   </TableCell>
                   <TableCell>{task.assignee}</TableCell>
@@ -183,6 +222,102 @@ const ProjectTasks = ({ project }: ProjectTasksProps) => {
           </Table>
         </CardContent>
       </Card>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              {selectedTask && getStatusIcon(selectedTask.status)}
+              {selectedTask?.title}
+            </DialogTitle>
+            <DialogDescription>
+              Detalles completos de la tarea
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedTask && (
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Estado</label>
+                  <div className="mt-1">
+                    {getStatusBadge(selectedTask.status)}
+                  </div>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Prioridad</label>
+                  <div className="mt-1">
+                    {getPriorityBadge(selectedTask.priority)}
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-muted-foreground">Descripción</label>
+                <p className="mt-1 text-sm">{selectedTask.description}</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Responsable</label>
+                  <p className="mt-1 text-sm font-medium">{selectedTask.assignee}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Fecha límite</label>
+                  <p className="mt-1 text-sm font-medium">
+                    {new Date(selectedTask.dueDate).toLocaleDateString('es-ES')}
+                  </p>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-muted-foreground">Requisitos relacionados</label>
+                <div className="mt-2 space-y-1">
+                  {selectedTask.relatedRequirements.map((req, index) => (
+                    <Badge key={index} variant="secondary" className="mr-2 mb-1">
+                      {req}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Horas estimadas</label>
+                  <p className="mt-1 text-sm font-medium">{selectedTask.estimatedHours}h</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Horas completadas</label>
+                  <p className="mt-1 text-sm font-medium">{selectedTask.completedHours}h</p>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-muted-foreground">
+                  Progreso ({((selectedTask.completedHours / selectedTask.estimatedHours) * 100).toFixed(0)}%)
+                </label>
+                <div className="mt-2 w-full bg-secondary rounded-full h-2">
+                  <div 
+                    className="bg-primary h-2 rounded-full transition-all" 
+                    style={{ width: `${(selectedTask.completedHours / selectedTask.estimatedHours) * 100}%` }}
+                  ></div>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-muted-foreground">Etiquetas</label>
+                <div className="mt-2">
+                  {selectedTask.tags.map((tag, index) => (
+                    <Badge key={index} variant="outline" className="mr-2 mb-1">
+                      {tag}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
