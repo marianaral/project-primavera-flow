@@ -43,7 +43,7 @@ const ProjectForm = ({ isOpen, onClose, onSubmit, initialData, title }: ProjectF
   const [formData, setFormData] = useState<ProjectFormData>({
     name: initialData?.name || "",
     description: initialData?.description || "",
-    status: initialData?.status || "To-do",
+    status: (initialData?.status as ProjectStatus) || "To-do",
     startDate: initialData?.startDate || "",
     endDate: initialData?.endDate || "",
     budget: initialData?.budget || 0,
