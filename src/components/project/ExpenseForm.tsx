@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -39,12 +39,34 @@ interface ExpenseFormProps {
 const ExpenseForm = ({ isOpen, onClose, onSubmit, initialData, title }: ExpenseFormProps) => {
   const { toast } = useToast();
   const [formData, setFormData] = useState<ExpenseFormData>({
-    description: initialData?.description || "",
-    amount: initialData?.amount || 0,
-    category: initialData?.category || "other",
-    date: initialData?.date || new Date().toISOString().split('T')[0],
-    approved: initialData?.approved || false,
+    description: "",
+    amount: 0,
+    category: "other",
+    date: new Date().toISOString().split('T')[0],
+    approved: false,
   });
+
+  useEffect(() => {
+    if (isOpen) {
+      if (initialData) {
+        setFormData({
+          description: initialData.description || "",
+          amount: initialData.amount || 0,
+          category: initialData.category || "other",
+          date: initialData.date || new Date().toISOString().split('T')[0],
+          approved: initialData.approved || false,
+        });
+      } else {
+        setFormData({
+          description: "",
+          amount: 0,
+          category: "other",
+          date: new Date().toISOString().split('T')[0],
+          approved: false,
+        });
+      }
+    }
+  }, [initialData, isOpen]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

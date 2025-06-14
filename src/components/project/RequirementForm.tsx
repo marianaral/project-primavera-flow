@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -40,13 +40,37 @@ interface RequirementFormProps {
 const RequirementForm = ({ isOpen, onClose, onSubmit, initialData, title }: RequirementFormProps) => {
   const { toast } = useToast();
   const [formData, setFormData] = useState<RequirementFormData>({
-    title: initialData?.title || "",
-    description: initialData?.description || "",
-    type: initialData?.type || "functional",
-    status: initialData?.status || "pending",
-    priority: initialData?.priority || "medium",
-    dueDate: initialData?.dueDate || "",
+    title: "",
+    description: "",
+    type: "functional",
+    status: "pending",
+    priority: "medium",
+    dueDate: "",
   });
+
+  useEffect(() => {
+    if (isOpen) {
+      if (initialData) {
+        setFormData({
+          title: initialData.title || "",
+          description: initialData.description || "",
+          type: initialData.type || "functional",
+          status: initialData.status || "pending",
+          priority: initialData.priority || "medium",
+          dueDate: initialData.dueDate || "",
+        });
+      } else {
+        setFormData({
+          title: "",
+          description: "",
+          type: "functional",
+          status: "pending",
+          priority: "medium",
+          dueDate: "",
+        });
+      }
+    }
+  }, [initialData, isOpen]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
