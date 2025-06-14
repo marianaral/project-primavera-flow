@@ -1,6 +1,5 @@
 
-import { useState, useMemo } from "react";
-import { projects } from "@/data/projects";
+import { useState, useMemo, useEffect } from "react";
 import ProjectCard from "@/components/ProjectCard";
 import ProjectForm from "@/components/project/ProjectForm";
 import { Button } from "@/components/ui/button";
@@ -8,23 +7,93 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress";
 import { PlusCircle, TrendingUp, DollarSign, Calendar, Target, Clock, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { transformDatabaseProject } from "@/types/database";
+import type { DatabaseProject } from "@/types/database";
 
 const Dashboard = () => {
   const { toast } = useToast();
   const [isProjectFormOpen, setIsProjectFormOpen] = useState(false);
-  const [projectList, setProjectList] = useState(projects);
+  const [projectList, setProjectList] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleCreateProject = (projectData: any) => {
-    const newProject = {
-      id: `proj-${Date.now()}`,
-      ...projectData,
-      spent: 0,
-    };
-    setProjectList([...projectList, newProject]);
-    toast({
-      title: "Éxito",
-      description: "Proyecto creado correctamente",
-    });
+  useEffect(() => {
+    fetchProjects();
+  }, []);
+
+  const fetchProjects = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('projects')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching projects:', error);
+        toast({
+          title: "Error",
+          description: "No se pudieron cargar los proyectos",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const transformedProjects = data?.map(project => 
+        transformDatabaseProject(project as DatabaseProject)
+      ) || [];
+
+      setProjectList(transformedProjects);
+    } catch (error) {
+      console.error('Error:', error);
+      toast({
+        title: "Error",
+        description: "Ocurrió un error al cargar los proyectos",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCreateProject = async (projectData: any) => {
+    try {
+      const { data, error } = await supabase
+        .from('projects')
+        .insert([{
+          name: projectData.name,
+          description: projectData.description,
+          status: projectData.status,
+          start_date: projectData.startDate || null,
+          end_date: projectData.endDate || null,
+          budget: projectData.budget || null,
+        }])
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error creating project:', error);
+        toast({
+          title: "Error",
+          description: "No se pudo crear el proyecto",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const newProject = transformDatabaseProject(data as DatabaseProject);
+      setProjectList([newProject, ...projectList]);
+      toast({
+        title: "Éxito",
+        description: "Proyecto creado correctamente",
+      });
+    } catch (error) {
+      console.error('Error:', error);
+      toast({
+        title: "Error",
+        description: "Ocurrió un error al crear el proyecto",
+        variant: "destructive",
+      });
+    }
   };
 
   // Calcular métricas generales
@@ -48,6 +117,7 @@ const Dashboard = () => {
     const now = new Date();
     const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
     const projectsDueSoon = projectList.filter(p => {
+      if (!p.endDate) return false;
       const endDate = new Date(p.endDate);
       return endDate >= now && endDate <= thirtyDaysFromNow && p.status !== "Finished";
     }).length;
@@ -56,6 +126,7 @@ const Dashboard = () => {
     const activeProjects = projectList.filter(p => p.status === "Doing");
     const avgEfficiency = activeProjects.length > 0 ? 
       activeProjects.reduce((sum, p) => {
+        if (!p.startDate || !p.endDate) return sum + 1;
         const startDate = new Date(p.startDate);
         const endDate = new Date(p.endDate);
         const totalDuration = endDate.getTime() - startDate.getTime();
@@ -79,6 +150,16 @@ const Dashboard = () => {
       completionRate: totalProjects > 0 ? (completedProjects / totalProjects) * 100 : 0
     };
   }, [projectList]);
+
+  if (loading) {
+    return (
+      <div className="animate-fade-in">
+        <div className="flex justify-center items-center h-64">
+          <div className="text-muted-foreground">Cargando dashboard...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="animate-fade-in">
@@ -206,21 +287,21 @@ const Dashboard = () => {
                 <span className="text-sm">Finalizados</span>
                 <span className="font-semibold text-green-600">{metrics.completedProjects}</span>
               </div>
-              <Progress value={(metrics.completedProjects / metrics.totalProjects) * 100} className="h-2" />
+              <Progress value={metrics.totalProjects > 0 ? (metrics.completedProjects / metrics.totalProjects) * 100 : 0} className="h-2" />
             </div>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-sm">En Progreso</span>
                 <span className="font-semibold text-blue-600">{metrics.inProgressProjects}</span>
               </div>
-              <Progress value={(metrics.inProgressProjects / metrics.totalProjects) * 100} className="h-2" />
+              <Progress value={metrics.totalProjects > 0 ? (metrics.inProgressProjects / metrics.totalProjects) * 100 : 0} className="h-2" />
             </div>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-sm">Pendientes</span>
                 <span className="font-semibold text-yellow-600">{metrics.pendingProjects}</span>
               </div>
-              <Progress value={(metrics.pendingProjects / metrics.totalProjects) * 100} className="h-2" />
+              <Progress value={metrics.totalProjects > 0 ? (metrics.pendingProjects / metrics.totalProjects) * 100 : 0} className="h-2" />
             </div>
           </CardContent>
         </Card>
@@ -229,11 +310,23 @@ const Dashboard = () => {
       {/* Lista de Proyectos */}
       <div>
         <h2 className="text-xl font-semibold mb-4">Proyectos Recientes</h2>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {projectList.slice(0, 8).map((project) => (
-            <ProjectCard key={project.id} project={project} />
-          ))}
-        </div>
+        {projectList.length === 0 ? (
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center py-8">
+              <p className="text-muted-foreground mb-4">No hay proyectos disponibles</p>
+              <Button onClick={() => setIsProjectFormOpen(true)}>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Crear primer proyecto
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {projectList.slice(0, 8).map((project) => (
+              <ProjectCard key={project.id} project={project} />
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Project Form Dialog */}

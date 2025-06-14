@@ -1,6 +1,6 @@
 
 import { useParams, Link } from "react-router-dom";
-import { projects } from "@/data/projects";
+import { useState, useEffect } from "react";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -10,10 +10,66 @@ import ProjectRequirements from "@/components/project/ProjectRequirements";
 import ProjectFinances from "@/components/project/ProjectFinances";
 import ProjectMetrics from "@/components/project/ProjectMetrics";
 import ProjectExpenses from "@/components/project/ProjectExpenses";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { transformDatabaseProject } from "@/types/database";
+import type { DatabaseProject } from "@/types/database";
 
 const ProjectPage = () => {
   const { id } = useParams();
-  const project = projects.find((p) => p.id === id);
+  const { toast } = useToast();
+  const [project, setProject] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProject = async () => {
+      if (!id) return;
+
+      try {
+        const { data, error } = await supabase
+          .from('projects')
+          .select('*')
+          .eq('id', id)
+          .single();
+
+        if (error) {
+          console.error('Error fetching project:', error);
+          toast({
+            title: "Error",
+            description: "No se pudo cargar el proyecto",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        if (data) {
+          const transformedProject = transformDatabaseProject(data as DatabaseProject);
+          setProject(transformedProject);
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        toast({
+          title: "Error",
+          description: "Ocurrió un error al cargar el proyecto",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProject();
+  }, [id, toast]);
+
+  if (loading) {
+    return (
+      <div className="animate-fade-in">
+        <div className="flex justify-center items-center h-64">
+          <div className="text-muted-foreground">Cargando proyecto...</div>
+        </div>
+      </div>
+    );
+  }
 
   if (!project) {
     return (
