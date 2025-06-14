@@ -3,8 +3,6 @@ import { Project } from "@/data/projects";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { PlusCircle, CheckCircle, Clock, AlertCircle, Pencil, Trash2 } from "lucide-react";
 import {
   Table,
@@ -32,6 +30,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import TaskForm from "./TaskForm";
+import TaskViewControls, { TaskViewType } from "./TaskViewControls";
+import TaskColumnView from "./TaskColumnView";
 import { useToast } from "@/hooks/use-toast";
 
 interface Task {
@@ -60,6 +60,7 @@ const ProjectTasks = ({ project }: ProjectTasksProps) => {
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
+  const [viewType, setViewType] = useState<TaskViewType>("list");
   
   const [tasks, setTasks] = useState<Task[]>([
     {
@@ -230,81 +231,94 @@ const ProjectTasks = ({ project }: ProjectTasksProps) => {
             {completedTasks} de {tasks.length} tareas completadas ({progressPercentage.toFixed(0)}%)
           </p>
         </div>
-        <Button onClick={() => setIsFormOpen(true)}>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Nueva Tarea
-        </Button>
+        <div className="flex items-center gap-4">
+          <TaskViewControls viewType={viewType} onViewTypeChange={setViewType} />
+          <Button onClick={() => setIsFormOpen(true)}>
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Nueva Tarea
+          </Button>
+        </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Lista de Tareas</CardTitle>
-          <CardDescription>
-            Gestiona todas las tareas del proyecto {project.name}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Estado</TableHead>
-                <TableHead>Tarea</TableHead>
-                <TableHead>Responsable</TableHead>
-                <TableHead>Prioridad</TableHead>
-                <TableHead>Fecha límite</TableHead>
-                <TableHead>Acciones</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {tasks.map((task) => (
-                <TableRow key={task.id}>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      {getStatusIcon(task.status)}
-                      {getStatusBadge(task.status)}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="cursor-pointer" onClick={() => handleTaskClick(task)}>
-                      <div className="font-medium">{task.title}</div>
-                      <div className="text-sm text-muted-foreground line-clamp-1">{task.description}</div>
-                    </div>
-                  </TableCell>
-                  <TableCell>{task.assignee}</TableCell>
-                  <TableCell>{getPriorityBadge(task.priority)}</TableCell>
-                  <TableCell>
-                    {new Date(task.dueDate).toLocaleDateString('es-ES')}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleEditTask(task);
-                        }}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteTask(task);
-                        }}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
+      {viewType === "list" ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Lista de Tareas</CardTitle>
+            <CardDescription>
+              Gestiona todas las tareas del proyecto {project.name}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Estado</TableHead>
+                  <TableHead>Tarea</TableHead>
+                  <TableHead>Responsable</TableHead>
+                  <TableHead>Prioridad</TableHead>
+                  <TableHead>Fecha límite</TableHead>
+                  <TableHead>Acciones</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+              </TableHeader>
+              <TableBody>
+                {tasks.map((task) => (
+                  <TableRow key={task.id}>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        {getStatusIcon(task.status)}
+                        {getStatusBadge(task.status)}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="cursor-pointer" onClick={() => handleTaskClick(task)}>
+                        <div className="font-medium">{task.title}</div>
+                        <div className="text-sm text-muted-foreground line-clamp-1">{task.description}</div>
+                      </div>
+                    </TableCell>
+                    <TableCell>{task.assignee}</TableCell>
+                    <TableCell>{getPriorityBadge(task.priority)}</TableCell>
+                    <TableCell>
+                      {new Date(task.dueDate).toLocaleDateString('es-ES')}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEditTask(task);
+                          }}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteTask(task);
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      ) : (
+        <TaskColumnView
+          tasks={tasks}
+          viewType={viewType}
+          onTaskClick={handleTaskClick}
+          onEditTask={handleEditTask}
+          onDeleteTask={handleDeleteTask}
+        />
+      )}
 
       {/* Task Details Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
