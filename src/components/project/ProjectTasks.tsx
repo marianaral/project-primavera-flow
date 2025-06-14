@@ -98,7 +98,7 @@ const ProjectTasks = ({ project }: ProjectTasksProps) => {
         id: task.id,
         title: task.title,
         description: task.description || "",
-        status: task.status === "pending" ? "pending" : task.status === "in-progress" ? "in-progress" : "completed",
+        status: task.status as "pending" | "in-progress" | "completed",
         assignee: task.responsible || "",
         dueDate: task.deadline || "",
         priority: task.priority as "low" | "medium" | "high",

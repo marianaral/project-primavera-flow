@@ -178,7 +178,7 @@ const ProjectExpenses = ({ project }: ProjectExpensesProps) => {
         ...editingExpense,
         description: data.description || "",
         amount: Number(data.amount),
-        category: data.category,
+        category: data.category as "personal" | "equipment" | "software" | "services" | "other",
         date: data.date,
         approved: expenseData.approved,
       };

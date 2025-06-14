@@ -1,4 +1,3 @@
-
 import { useState, useMemo, useEffect } from "react";
 import { ProjectStatus } from "@/data/projects";
 import ProjectCard from "@/components/ProjectCard";
@@ -32,10 +31,11 @@ interface Project {
   name: string;
   description: string;
   status: ProjectStatus;
-  start_date: string | null;
-  end_date: string | null;
-  budget: number | null;
-  spent?: number;
+  progress: number;
+  startDate: string;
+  endDate: string;
+  budget: number;
+  spent: number;
 }
 
 const Projects = () => {
@@ -70,10 +70,15 @@ const Projects = () => {
       }
 
       const formattedProjects = data?.map(project => ({
-        ...project,
+        id: project.id,
+        name: project.name,
+        description: project.description || "",
+        status: project.status as ProjectStatus,
+        progress: 0, // TODO: Calculate progress from tasks
+        startDate: project.start_date || "",
+        endDate: project.end_date || "",
+        budget: Number(project.budget) || 0,
         spent: 0, // TODO: Calculate from expenses table
-        startDate: project.start_date,
-        endDate: project.end_date,
       })) || [];
 
       setProjectList(formattedProjects);
@@ -114,11 +119,16 @@ const Projects = () => {
         return;
       }
 
-      const newProject = {
-        ...data,
+      const newProject: Project = {
+        id: data.id,
+        name: data.name,
+        description: data.description || "",
+        status: data.status as ProjectStatus,
+        progress: 0,
+        startDate: data.start_date || "",
+        endDate: data.end_date || "",
+        budget: Number(data.budget) || 0,
         spent: 0,
-        startDate: data.start_date,
-        endDate: data.end_date,
       };
 
       setProjectList([...projectList, newProject]);
@@ -169,11 +179,16 @@ const Projects = () => {
         return;
       }
 
-      const updatedProject = {
-        ...data,
+      const updatedProject: Project = {
+        id: data.id,
+        name: data.name,
+        description: data.description || "",
+        status: data.status as ProjectStatus,
+        progress: editingProject.progress,
+        startDate: data.start_date || "",
+        endDate: data.end_date || "",
+        budget: Number(data.budget) || 0,
         spent: editingProject.spent,
-        startDate: data.start_date,
-        endDate: data.end_date,
       };
 
       setProjectList(projectList.map(proj => proj.id === editingProject.id ? updatedProject : proj));
