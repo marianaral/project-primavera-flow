@@ -28,36 +28,37 @@ const MobileNav = () => {
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button variant="outline" size="icon">
+        <Button variant="outline" size="icon" className="bg-background border-border hover:bg-muted hover:text-foreground">
           <Menu className="h-4 w-4" />
+          <span className="sr-only">Abrir menú</span>
         </Button>
       </SheetTrigger>
-      <SheetContent side="left" className="w-64">
-        <SheetHeader>
-          <SheetTitle className="flex items-center gap-2">
-            <Bot className="h-6 w-6 text-primary" />
-            ProjectFlow
+      <SheetContent side="left" className="w-72 sm:w-80 bg-background border-border">
+        <SheetHeader className="text-left">
+          <SheetTitle className="flex items-center gap-2 text-foreground">
+            <Bot className="h-6 w-6 text-primary flex-shrink-0" />
+            <span className="truncate">ProjectFlow</span>
           </SheetTitle>
         </SheetHeader>
-        <div className="flex flex-col gap-4 mt-6">
-          <nav className="flex flex-col gap-2">
+        <div className="flex flex-col gap-4 mt-6 h-full">
+          <nav className="flex flex-col gap-2 flex-1">
             {navItems.map((item) => (
               <NavLink
                 key={item.label}
                 to={item.to}
                 onClick={handleNavClick}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:bg-muted ${
+                  `flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:bg-muted hover:text-foreground ${
                     isActive ? "bg-primary/20 text-primary font-semibold" : "text-muted-foreground"
                   }`
                 }
               >
-                <item.icon className="h-4 w-4" />
-                {item.label}
+                <item.icon className="h-4 w-4 flex-shrink-0" />
+                <span className="truncate">{item.label}</span>
               </NavLink>
             ))}
           </nav>
-          <div className="mt-4 pt-4 border-t">
+          <div className="mt-auto pt-4 border-t border-border">
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">Tema</span>
               <ThemeToggle />

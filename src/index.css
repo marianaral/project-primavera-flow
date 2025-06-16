@@ -39,7 +39,7 @@
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
     --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 75.1%;
+    --muted-foreground: 215 20.2% 65.1%;
     --accent: 217.2 32.6% 17.5%;
     --accent-foreground: 210 40% 98%;
     --destructive: 0 62.8% 30.6%;
@@ -54,9 +54,27 @@
   * {
     @apply border-border;
   }
+  
+  html {
+    scroll-behavior: smooth;
+  }
+  
   body {
-    @apply bg-background text-foreground antialiased;
+    @apply bg-background text-foreground antialiased min-h-screen;
     font-family: 'Inter', sans-serif;
+    transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+  }
+  
+  /* Responsive images */
+  img {
+    max-width: 100%;
+    height: auto;
+  }
+  
+  /* Ensure proper text wrapping */
+  * {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
   }
   
   /* Fix all Radix UI portals in dark mode */
@@ -84,6 +102,13 @@
   .dark [data-radix-popover-content] {
     @apply bg-popover text-popover-foreground border-border;
     color-scheme: dark;
+    z-index: 50;
+  }
+  
+  /* Fix sheet content in dark mode */
+  .dark [data-radix-dialog-content] {
+    @apply bg-background text-foreground border-border;
+    color-scheme: dark;
   }
   
   /* Fix labels in dark mode */
@@ -95,7 +120,7 @@
   .dark [data-radix-collection-item],
   .dark [data-radix-select-item],
   .dark [data-radix-dropdown-menu-item] {
-    @apply text-foreground;
+    @apply text-foreground hover:bg-muted hover:text-foreground;
   }
   
   /* Ensure all modal overlays work properly in dark mode */
@@ -106,29 +131,93 @@
 
   /* Fix all icons and text in dark mode */
   .dark svg {
-    @apply text-foreground;
+    @apply text-current;
   }
 
   /* Ensure buttons have proper icon colors in dark mode */
+  .dark button {
+    @apply text-current;
+  }
+  
   .dark button svg {
-    @apply text-foreground;
+    @apply text-current;
   }
 
   /* Fix select trigger icons and text */
   .dark [data-radix-select-trigger] {
-    @apply text-foreground;
+    @apply text-foreground bg-background border-border;
   }
 
   .dark [data-radix-select-trigger] svg {
     @apply text-foreground;
   }
 
-  /* Fix hover buttons and their icons */
-  .dark .group:hover button {
+  /* Fix hover states */
+  .dark .hover\:bg-muted:hover {
+    @apply bg-muted text-foreground;
+  }
+  
+  .dark .hover\:text-foreground:hover {
     @apply text-foreground;
   }
 
-  .dark .group:hover button svg {
-    @apply text-foreground;
+  /* Fix navigation active states */
+  .dark .bg-primary\/20 {
+    background-color: hsl(var(--primary) / 0.2);
   }
+  
+  /* Ensure proper z-index for dropdowns and modals */
+  [data-radix-portal] {
+    z-index: 9999;
+  }
+  
+  /* Fix scroll areas */
+  .dark [data-radix-scroll-area-viewport] {
+    @apply bg-background;
+  }
+  
+  /* Ensure proper contrast for muted text */
+  .dark .text-muted-foreground {
+    color: hsl(var(--muted-foreground));
+  }
+  
+  /* Fix card backgrounds */
+  .dark .bg-card {
+    @apply bg-card text-card-foreground;
+  }
+}
+
+/* Custom responsive utilities */
+@layer utilities {
+  .text-responsive {
+    @apply text-sm sm:text-base;
+  }
+  
+  .heading-responsive {
+    @apply text-xl sm:text-2xl lg:text-3xl;
+  }
+  
+  .container-responsive {
+    @apply max-w-full px-4 sm:px-6 lg:px-8;
+  }
+  
+  /* Mobile-first grid */
+  .grid-responsive {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4;
+  }
+  
+  .grid-responsive-auto {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-auto-fit;
+  }
+}
+
+/* Smooth transitions for theme changes */
+* {
+  transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out, color 0.2s ease-in-out;
+}
+
+/* Prevent layout shift on theme toggle */
+.dark,
+:root {
+  color-scheme: dark light;
 }
