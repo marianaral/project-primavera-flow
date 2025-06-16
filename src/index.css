@@ -180,11 +180,6 @@
   .dark .text-muted-foreground {
     color: hsl(var(--muted-foreground));
   }
-  
-  /* Fix card backgrounds */
-  .dark .bg-card {
-    @apply bg-card text-card-foreground;
-  }
 }
 
 /* Custom responsive utilities */
