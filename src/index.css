@@ -84,7 +84,9 @@
   
   /* Fix dialog content colors in dark mode */
   .dark [role="dialog"] {
-    @apply bg-card text-card-foreground border-border;
+    background-color: hsl(var(--card));
+    color: hsl(var(--card-foreground));
+    border-color: hsl(var(--border));
     color-scheme: dark;
   }
   
@@ -92,7 +94,9 @@
   .dark input,
   .dark textarea,
   .dark select {
-    @apply bg-input text-foreground border-border;
+    background-color: hsl(var(--input));
+    color: hsl(var(--foreground));
+    border-color: hsl(var(--border));
     color-scheme: dark;
   }
   
@@ -100,27 +104,38 @@
   .dark [data-radix-select-content],
   .dark [data-radix-dropdown-menu-content],
   .dark [data-radix-popover-content] {
-    @apply bg-popover text-popover-foreground border-border;
+    background-color: hsl(var(--popover));
+    color: hsl(var(--popover-foreground));
+    border-color: hsl(var(--border));
     color-scheme: dark;
     z-index: 50;
   }
   
   /* Fix sheet content in dark mode */
   .dark [data-radix-dialog-content] {
-    @apply bg-background text-foreground border-border;
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    border-color: hsl(var(--border));
     color-scheme: dark;
   }
   
   /* Fix labels in dark mode */
   .dark label {
-    @apply text-foreground;
+    color: hsl(var(--foreground));
   }
   
   /* Fix all Radix components in dark mode */
   .dark [data-radix-collection-item],
   .dark [data-radix-select-item],
   .dark [data-radix-dropdown-menu-item] {
-    @apply text-foreground hover:bg-muted hover:text-foreground;
+    color: hsl(var(--foreground));
+  }
+  
+  .dark [data-radix-collection-item]:hover,
+  .dark [data-radix-select-item]:hover,
+  .dark [data-radix-dropdown-menu-item]:hover {
+    background-color: hsl(var(--muted));
+    color: hsl(var(--foreground));
   }
   
   /* Ensure all modal overlays work properly in dark mode */
@@ -131,34 +146,37 @@
 
   /* Fix all icons and text in dark mode */
   .dark svg {
-    @apply text-current;
+    color: currentColor;
   }
 
   /* Ensure buttons have proper icon colors in dark mode */
   .dark button {
-    @apply text-current;
+    color: currentColor;
   }
   
   .dark button svg {
-    @apply text-current;
+    color: currentColor;
   }
 
   /* Fix select trigger icons and text */
   .dark [data-radix-select-trigger] {
-    @apply text-foreground bg-background border-border;
+    color: hsl(var(--foreground));
+    background-color: hsl(var(--background));
+    border-color: hsl(var(--border));
   }
 
   .dark [data-radix-select-trigger] svg {
-    @apply text-foreground;
+    color: hsl(var(--foreground));
   }
 
   /* Fix hover states */
   .dark .hover\:bg-muted:hover {
-    @apply bg-muted text-foreground;
+    background-color: hsl(var(--muted));
+    color: hsl(var(--foreground));
   }
   
   .dark .hover\:text-foreground:hover {
-    @apply text-foreground;
+    color: hsl(var(--foreground));
   }
 
   /* Fix navigation active states */
@@ -173,12 +191,64 @@
   
   /* Fix scroll areas */
   .dark [data-radix-scroll-area-viewport] {
-    @apply bg-background;
+    background-color: hsl(var(--background));
   }
   
   /* Ensure proper contrast for muted text */
   .dark .text-muted-foreground {
     color: hsl(var(--muted-foreground));
+  }
+
+  /* Fix toggle group in dark mode */
+  .dark [data-radix-toggle-group-item] {
+    color: hsl(var(--foreground));
+    border-color: hsl(var(--border));
+  }
+
+  .dark [data-radix-toggle-group-item]:hover {
+    background-color: hsl(var(--muted));
+    color: hsl(var(--foreground));
+  }
+
+  .dark [data-radix-toggle-group-item][data-state="on"] {
+    background-color: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+  }
+
+  /* Fix tabs in dark mode */
+  .dark [data-radix-tabs-trigger] {
+    color: hsl(var(--muted-foreground));
+  }
+
+  .dark [data-radix-tabs-trigger][data-state="active"] {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    border-color: hsl(var(--border));
+  }
+
+  /* Fix badges in dark mode */
+  .dark .bg-green-100 {
+    background-color: hsl(142 76% 36% / 0.2);
+  }
+  
+  .dark .bg-blue-100 {
+    background-color: hsl(221 83% 53% / 0.2);
+  }
+  
+  .dark .bg-yellow-100 {
+    background-color: hsl(45 93% 47% / 0.2);
+  }
+  
+  .dark .bg-red-100 {
+    background-color: hsl(0 84% 60% / 0.2);
+  }
+  
+  .dark .bg-orange-100 {
+    background-color: hsl(25 95% 53% / 0.2);
+  }
+  
+  .dark .bg-gray-100 {
+    background-color: hsl(220 13% 91% / 0.2);
   }
 }
 
@@ -203,6 +273,21 @@
   
   .grid-responsive-auto {
     @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-auto-fit;
+  }
+
+  /* Text truncation utilities */
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 }
 
