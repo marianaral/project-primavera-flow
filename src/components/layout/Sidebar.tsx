@@ -11,29 +11,27 @@ const Sidebar = () => {
   ];
 
   return (
-    <aside className="hidden md:flex flex-col w-64 min-w-64 bg-card border-r border-border p-4 sticky top-0 h-screen overflow-y-auto">
+    <aside className="hidden md:flex flex-col w-64 bg-card border-r border-border p-4">
       <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-2 min-w-0">
-          <Bot className="h-8 w-8 text-primary flex-shrink-0" />
-          <h1 className="text-xl font-bold text-foreground truncate">ProjectFlow</h1>
+        <div className="flex items-center gap-2">
+          <Bot className="h-8 w-8 text-primary" />
+          <h1 className="text-xl font-bold text-foreground">ProjectFlow</h1>
         </div>
-        <div className="flex-shrink-0">
-          <ThemeToggle />
-        </div>
+        <ThemeToggle />
       </div>
-      <nav className="flex flex-col gap-2 flex-1">
+      <nav className="flex flex-col gap-2">
         {navItems.map((item) => (
           <NavLink
             key={item.label}
             to={item.to}
             className={({ isActive }) =>
               `flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:bg-muted ${
-                isActive ? "bg-primary/20 text-primary font-semibold" : "text-muted-foreground hover:text-foreground"
+                isActive ? "bg-primary/20 text-primary font-semibold" : "text-muted-foreground"
               }`
             }
           >
-            <item.icon className="h-4 w-4 flex-shrink-0" />
-            <span className="truncate">{item.label}</span>
+            <item.icon className="h-4 w-4" />
+            {item.label}
           </NavLink>
         ))}
       </nav>
