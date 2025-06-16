@@ -3,7 +3,7 @@ import { Project } from "@/data/projects";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { PlusCircle, Clock, CheckCircle, AlertTriangle, Edit, Trash2 } from "lucide-react";
+import { PlusCircle, Clock, CheckCircle, AlertTriangle, Edit, Trash2, Eye } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -23,6 +23,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import TaskForm from "./TaskForm";
+import TaskDetailModal from "./TaskDetailModal";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -49,6 +50,8 @@ const ProjectTasks = ({ project }: ProjectTasksProps) => {
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -82,7 +85,7 @@ const ProjectTasks = ({ project }: ProjectTasksProps) => {
         assignee: task.responsible || "",
         dueDate: task.deadline || "",
         estimatedHours: Number(task.estimated_hours) || 0,
-        tags: "", // Las etiquetas están en tabla separada
+        tags: "", 
         project_id: task.project_id,
       })) || [];
 
@@ -258,6 +261,11 @@ const ProjectTasks = ({ project }: ProjectTasksProps) => {
     setTaskToDelete(null);
   };
 
+  const handleViewTask = (task: Task) => {
+    setSelectedTask(task);
+    setIsDetailModalOpen(true);
+  };
+
   const getStatusIcon = (status: Task['status']) => {
     switch (status) {
       case "completed":
@@ -324,20 +332,20 @@ const ProjectTasks = ({ project }: ProjectTasksProps) => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h3 className="text-lg font-semibold">Tareas del Proyecto</h3>
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             {completedTasks} de {tasks.length} tareas completadas ({completionPercentage.toFixed(0)}%)
           </p>
         </div>
-        <Button onClick={() => setIsFormOpen(true)}>
+        <Button onClick={() => setIsFormOpen(true)} className="w-full sm:w-auto">
           <PlusCircle className="mr-2 h-4 w-4" />
           Nueva Tarea
         </Button>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
         {["pending", "in-progress", "completed"].map((status) => {
           const statusTasks = tasks.filter(task => task.status === status);
           
@@ -370,61 +378,75 @@ const ProjectTasks = ({ project }: ProjectTasksProps) => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Estado</TableHead>
-                <TableHead>Tarea</TableHead>
-                <TableHead>Responsable</TableHead>
-                <TableHead>Prioridad</TableHead>
-                <TableHead>Fecha límite</TableHead>
-                <TableHead>Horas est.</TableHead>
-                <TableHead>Acciones</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {tasks.map((task) => (
-                <TableRow key={task.id}>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      {getStatusIcon(task.status)}
-                      {getStatusBadge(task.status)}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div>
-                      <div className="font-medium">{task.title}</div>
-                      <div className="text-sm text-muted-foreground">{task.description}</div>
-                    </div>
-                  </TableCell>
-                  <TableCell>{task.assignee}</TableCell>
-                  <TableCell>{getPriorityBadge(task.priority)}</TableCell>
-                  <TableCell>
-                    {task.dueDate ? new Date(task.dueDate).toLocaleDateString('es-ES') : "-"}
-                  </TableCell>
-                  <TableCell>{task.estimatedHours}h</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleEditTask(task)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDeleteTask(task)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="min-w-[100px]">Estado</TableHead>
+                  <TableHead className="min-w-[150px]">Tarea</TableHead>
+                  <TableHead className="min-w-[100px]">Responsable</TableHead>
+                  <TableHead className="min-w-[100px]">Prioridad</TableHead>
+                  <TableHead className="min-w-[100px]">Fecha límite</TableHead>
+                  <TableHead className="min-w-[80px]">Horas est.</TableHead>
+                  <TableHead className="min-w-[120px]">Acciones</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {tasks.map((task) => (
+                  <TableRow key={task.id}>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        {getStatusIcon(task.status)}
+                        <div className="hidden sm:block">
+                          {getStatusBadge(task.status)}
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div>
+                        <div className="font-medium">{task.title}</div>
+                        <div className="text-sm text-muted-foreground hidden sm:block">{task.description}</div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-sm">{task.assignee}</TableCell>
+                    <TableCell>{getPriorityBadge(task.priority)}</TableCell>
+                    <TableCell className="text-sm">
+                      {task.dueDate ? new Date(task.dueDate).toLocaleDateString('es-ES') : "-"}
+                    </TableCell>
+                    <TableCell className="text-sm">{task.estimatedHours}h</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleViewTask(task)}
+                          className="h-8 w-8 p-0"
+                        >
+                          <Eye className="h-3 w-3" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEditTask(task)}
+                          className="h-8 w-8 p-0"
+                        >
+                          <Edit className="h-3 w-3" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDeleteTask(task)}
+                          className="h-8 w-8 p-0"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
 
@@ -437,6 +459,15 @@ const ProjectTasks = ({ project }: ProjectTasksProps) => {
         onSubmit={editingTask ? handleUpdateTask : handleCreateTask}
         initialData={editingTask || undefined}
         title={editingTask ? "Editar Tarea" : "Nueva Tarea"}
+      />
+
+      <TaskDetailModal
+        task={selectedTask}
+        isOpen={isDetailModalOpen}
+        onClose={() => {
+          setIsDetailModalOpen(false);
+          setSelectedTask(null);
+        }}
       />
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

@@ -85,25 +85,37 @@ const ProjectPage = () => {
   }
 
   return (
-    <div className="animate-fade-in">
-      <Link to="/projects" className="inline-flex items-center gap-2 mb-4 text-sm text-muted-foreground hover:text-foreground">
+    <div className="animate-fade-in space-y-6">
+      <Link to="/projects" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
         <ArrowLeft className="h-4 w-4" />
         Volver a Proyectos
       </Link>
       
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold tracking-tight mb-2">{project.name}</h1>
-        <p className="text-muted-foreground">{project.description}</p>
+      <div className="space-y-2">
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{project.name}</h1>
+        <p className="text-muted-foreground text-sm sm:text-base">{project.description}</p>
       </div>
 
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-6">
-          <TabsTrigger value="overview">Información</TabsTrigger>
-          <TabsTrigger value="tasks">Tareas</TabsTrigger>
-          <TabsTrigger value="requirements">Requisitos</TabsTrigger>
-          <TabsTrigger value="expenses">Gastos</TabsTrigger>
-          <TabsTrigger value="finances">Finanzas</TabsTrigger>
-          <TabsTrigger value="metrics">Métricas</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6 h-auto">
+          <TabsTrigger value="overview" className="text-xs sm:text-sm px-2 py-2">
+            Información
+          </TabsTrigger>
+          <TabsTrigger value="tasks" className="text-xs sm:text-sm px-2 py-2">
+            Tareas
+          </TabsTrigger>
+          <TabsTrigger value="requirements" className="text-xs sm:text-sm px-2 py-2">
+            Requisitos
+          </TabsTrigger>
+          <TabsTrigger value="expenses" className="text-xs sm:text-sm px-2 py-2">
+            Gastos
+          </TabsTrigger>
+          <TabsTrigger value="finances" className="text-xs sm:text-sm px-2 py-2">
+            Finanzas
+          </TabsTrigger>
+          <TabsTrigger value="metrics" className="text-xs sm:text-sm px-2 py-2">
+            Métricas
+          </TabsTrigger>
         </TabsList>
         
         <TabsContent value="overview" className="mt-6">
