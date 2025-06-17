@@ -85,63 +85,139 @@ const ProjectPage = () => {
   }
 
   return (
-    <div className="animate-fade-in space-y-4 sm:space-y-6 w-full max-w-full overflow-x-hidden">
+    <div className="animate-fade-in space-y-3 sm:space-y-4 md:space-y-6 w-full max-w-full overflow-x-hidden">
       <Link to="/projects" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
         <ArrowLeft className="h-4 w-4" />
         Volver a Proyectos
       </Link>
       
       <div className="space-y-2">
-        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight break-words">{project.name}</h1>
+        <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold tracking-tight break-words">{project.name}</h1>
         <p className="text-muted-foreground text-sm sm:text-base break-words">{project.description}</p>
       </div>
 
       <Tabs defaultValue="overview" className="w-full">
-        <div className="w-full overflow-x-auto">
-          <TabsList className="grid w-full grid-cols-6 h-auto min-w-[600px] lg:min-w-0 mb-4">
-            <TabsTrigger value="overview" className="text-xs sm:text-sm px-1 sm:px-2 py-2 whitespace-nowrap">
-              Información
-            </TabsTrigger>
-            <TabsTrigger value="tasks" className="text-xs sm:text-sm px-1 sm:px-2 py-2 whitespace-nowrap">
-              Tareas
-            </TabsTrigger>
-            <TabsTrigger value="requirements" className="text-xs sm:text-sm px-1 sm:px-2 py-2 whitespace-nowrap">
-              Requisitos
-            </TabsTrigger>
-            <TabsTrigger value="expenses" className="text-xs sm:text-sm px-1 sm:px-2 py-2 whitespace-nowrap">
-              Gastos
-            </TabsTrigger>
-            <TabsTrigger value="finances" className="text-xs sm:text-sm px-1 sm:px-2 py-2 whitespace-nowrap">
-              Finanzas
-            </TabsTrigger>
-            <TabsTrigger value="metrics" className="text-xs sm:text-sm px-1 sm:px-2 py-2 whitespace-nowrap">
-              Métricas
-            </TabsTrigger>
-          </TabsList>
+        {/* Responsive tabs layout */}
+        <div className="w-full">
+          {/* Mobile: 2x3 grid */}
+          <div className="block sm:hidden mb-4">
+            <div className="grid grid-cols-2 gap-2">
+              <TabsList className="grid grid-cols-1 h-auto">
+                <TabsTrigger value="overview" className="text-xs px-2 py-2 whitespace-nowrap">
+                  Información
+                </TabsTrigger>
+              </TabsList>
+              <TabsList className="grid grid-cols-1 h-auto">
+                <TabsTrigger value="tasks" className="text-xs px-2 py-2 whitespace-nowrap">
+                  Tareas
+                </TabsTrigger>
+              </TabsList>
+              <TabsList className="grid grid-cols-1 h-auto">
+                <TabsTrigger value="requirements" className="text-xs px-2 py-2 whitespace-nowrap">
+                  Requisitos
+                </TabsTrigger>
+              </TabsList>
+              <TabsList className="grid grid-cols-1 h-auto">
+                <TabsTrigger value="expenses" className="text-xs px-2 py-2 whitespace-nowrap">
+                  Gastos
+                </TabsTrigger>
+              </TabsList>
+              <TabsList className="grid grid-cols-1 h-auto">
+                <TabsTrigger value="finances" className="text-xs px-2 py-2 whitespace-nowrap">
+                  Finanzas
+                </TabsTrigger>
+              </TabsList>
+              <TabsList className="grid grid-cols-1 h-auto">
+                <TabsTrigger value="metrics" className="text-xs px-2 py-2 whitespace-nowrap">
+                  Métricas
+                </TabsTrigger>
+              </TabsList>
+            </div>
+          </div>
+
+          {/* Tablet: 3x2 grid */}
+          <div className="hidden sm:block md:hidden mb-4">
+            <div className="grid grid-cols-3 gap-2">
+              <TabsList className="grid grid-cols-1 h-auto">
+                <TabsTrigger value="overview" className="text-sm px-2 py-2 whitespace-nowrap">
+                  Información
+                </TabsTrigger>
+              </TabsList>
+              <TabsList className="grid grid-cols-1 h-auto">
+                <TabsTrigger value="tasks" className="text-sm px-2 py-2 whitespace-nowrap">
+                  Tareas
+                </TabsTrigger>
+              </TabsList>
+              <TabsList className="grid grid-cols-1 h-auto">
+                <TabsTrigger value="requirements" className="text-sm px-2 py-2 whitespace-nowrap">
+                  Requisitos
+                </TabsTrigger>
+              </TabsList>
+              <TabsList className="grid grid-cols-1 h-auto">
+                <TabsTrigger value="expenses" className="text-sm px-2 py-2 whitespace-nowrap">
+                  Gastos
+                </TabsTrigger>
+              </TabsList>
+              <TabsList className="grid grid-cols-1 h-auto">
+                <TabsTrigger value="finances" className="text-sm px-2 py-2 whitespace-nowrap">
+                  Finanzas
+                </TabsTrigger>
+              </TabsList>
+              <TabsList className="grid grid-cols-1 h-auto">
+                <TabsTrigger value="metrics" className="text-sm px-2 py-2 whitespace-nowrap">
+                  Métricas
+                </TabsTrigger>
+              </TabsList>
+            </div>
+          </div>
+
+          {/* Desktop: horizontal layout */}
+          <div className="hidden md:block">
+            <TabsList className="grid w-full grid-cols-6 h-auto mb-4">
+              <TabsTrigger value="overview" className="text-sm px-3 py-2 whitespace-nowrap">
+                Información
+              </TabsTrigger>
+              <TabsTrigger value="tasks" className="text-sm px-3 py-2 whitespace-nowrap">
+                Tareas
+              </TabsTrigger>
+              <TabsTrigger value="requirements" className="text-sm px-3 py-2 whitespace-nowrap">
+                Requisitos
+              </TabsTrigger>
+              <TabsTrigger value="expenses" className="text-sm px-3 py-2 whitespace-nowrap">
+                Gastos
+              </TabsTrigger>
+              <TabsTrigger value="finances" className="text-sm px-3 py-2 whitespace-nowrap">
+                Finanzas
+              </TabsTrigger>
+              <TabsTrigger value="metrics" className="text-sm px-3 py-2 whitespace-nowrap">
+                Métricas
+              </TabsTrigger>
+            </TabsList>
+          </div>
         </div>
         
         <div className="w-full max-w-full overflow-x-hidden">
-          <TabsContent value="overview" className="mt-4 sm:mt-6">
+          <TabsContent value="overview" className="mt-3 sm:mt-4 md:mt-6">
             <ProjectOverview project={project} />
           </TabsContent>
           
-          <TabsContent value="tasks" className="mt-4 sm:mt-6">
+          <TabsContent value="tasks" className="mt-3 sm:mt-4 md:mt-6">
             <ProjectTasks project={project} />
           </TabsContent>
           
-          <TabsContent value="requirements" className="mt-4 sm:mt-6">
+          <TabsContent value="requirements" className="mt-3 sm:mt-4 md:mt-6">
             <ProjectRequirements project={project} />
           </TabsContent>
           
-          <TabsContent value="expenses" className="mt-4 sm:mt-6">
+          <TabsContent value="expenses" className="mt-3 sm:mt-4 md:mt-6">
             <ProjectExpenses project={project} />
           </TabsContent>
           
-          <TabsContent value="finances" className="mt-4 sm:mt-6">
+          <TabsContent value="finances" className="mt-3 sm:mt-4 md:mt-6">
             <ProjectFinances project={project} />
           </TabsContent>
           
-          <TabsContent value="metrics" className="mt-4 sm:mt-6">
+          <TabsContent value="metrics" className="mt-3 sm:mt-4 md:mt-6">
             <ProjectMetrics project={project} />
           </TabsContent>
         </div>

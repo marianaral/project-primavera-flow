@@ -67,25 +67,25 @@
     max-width: 100vw;
   }
   
-  /* Prevent horizontal scroll globally */
   #root {
     overflow-x: hidden;
     width: 100%;
     max-width: 100vw;
   }
   
-  /* Fix all Radix UI portals in dark mode */
+  /* Enhanced dark mode support for all Radix UI components */
   .dark [data-radix-portal] {
     color-scheme: dark;
   }
   
-  /* Fix dialog content colors in dark mode */
-  .dark [role="dialog"] {
+  /* Dialog and modal backgrounds in dark mode */
+  .dark [role="dialog"],
+  .dark [data-radix-dialog-content] {
     @apply bg-card text-card-foreground border-border;
     color-scheme: dark;
   }
   
-  /* Fix form elements in dark mode */
+  /* Form elements in dark mode */
   .dark input,
   .dark textarea,
   .dark select {
@@ -93,7 +93,7 @@
     color-scheme: dark;
   }
   
-  /* Fix all dropdown and select content in dark mode */
+  /* Dropdown and popover content */
   .dark [data-radix-select-content],
   .dark [data-radix-dropdown-menu-content],
   .dark [data-radix-popover-content] {
@@ -101,7 +101,7 @@
     color-scheme: dark;
   }
   
-  /* Fix sheet/drawer content in dark mode */
+  /* Sheet/drawer content */
   .dark [data-radix-dialog-content],
   .dark [data-vaul-drawer],
   .dark [data-vaul-drawer-content] {
@@ -109,12 +109,12 @@
     color-scheme: dark;
   }
   
-  /* Fix labels in dark mode */
+  /* Labels and text in dark mode */
   .dark label {
     @apply text-foreground;
   }
   
-  /* Fix all Radix components in dark mode */
+  /* Menu items */
   .dark [data-radix-collection-item],
   .dark [data-radix-select-item],
   .dark [data-radix-dropdown-menu-item] {
@@ -126,23 +126,22 @@
     @apply bg-accent text-accent-foreground;
   }
   
-  /* Ensure all modal overlays work properly in dark mode */
+  /* Modal overlays */
   .dark [data-radix-dialog-overlay],
   .dark [data-radix-alert-dialog-overlay] {
     background-color: rgba(0, 0, 0, 0.8);
   }
 
-  /* Fix all icons and text in dark mode */
+  /* Icons in dark mode */
   .dark svg {
     @apply text-foreground;
   }
 
-  /* Ensure buttons have proper icon colors in dark mode */
   .dark button svg {
     @apply text-foreground;
   }
 
-  /* Fix select trigger icons and text */
+  /* Select components */
   .dark [data-radix-select-trigger] {
     @apply text-foreground bg-input border-border;
   }
@@ -151,16 +150,7 @@
     @apply text-foreground;
   }
 
-  /* Fix hover buttons and their icons */
-  .dark .group:hover button {
-    @apply text-foreground;
-  }
-
-  .dark .group:hover button svg {
-    @apply text-foreground;
-  }
-
-  /* Ensure tabs are visible in dark mode */
+  /* Tabs in dark mode */
   .dark [data-radix-tabs-trigger] {
     @apply text-foreground bg-transparent border-border;
   }
@@ -169,12 +159,7 @@
     @apply bg-background text-foreground shadow-sm;
   }
 
-  /* Fix sheet overlay in dark mode */
-  .dark [data-radix-dialog-overlay] {
-    @apply bg-black/80;
-  }
-
-  /* Fix project filter buttons in dark mode - use direct CSS */
+  /* Project filter buttons */
   .dark button.bg-muted {
     background-color: hsl(var(--muted));
     color: hsl(var(--foreground));
@@ -185,19 +170,12 @@
     color: hsl(var(--primary-foreground));
   }
 
-  /* Fix all text colors in dark mode for better visibility */
+  /* Text colors */
   .dark .text-muted-foreground {
     color: hsl(var(--muted-foreground));
   }
-
-  /* Ensure proper dark mode for dialogs and forms */
-  .dark [data-radix-dialog-content] {
-    background-color: hsl(var(--card));
-    color: hsl(var(--card-foreground));
-    border-color: hsl(var(--border));
-  }
   
-  /* Fix table styling in dark mode */
+  /* Table styling */
   .dark table {
     @apply text-foreground;
   }
@@ -210,18 +188,50 @@
     @apply text-foreground border-border;
   }
   
-  /* Fix card hover states in dark mode */
+  /* Card hover states */
   .dark .card:hover {
     @apply bg-card/80;
   }
   
-  /* Ensure proper contrast for badges in dark mode */
+  /* Badges in dark mode */
   .dark .badge {
     @apply text-foreground;
   }
+
+  /* Enhanced form support in dark mode */
+  .dark input[type="text"],
+  .dark input[type="email"],
+  .dark input[type="password"],
+  .dark input[type="number"],
+  .dark input[type="date"],
+  .dark textarea {
+    @apply bg-background border-border text-foreground placeholder:text-muted-foreground;
+  }
+
+  .dark input[type="text"]:focus,
+  .dark input[type="email"]:focus,
+  .dark input[type="password"]:focus,
+  .dark input[type="number"]:focus,
+  .dark input[type="date"]:focus,
+  .dark textarea:focus {
+    @apply border-ring ring-ring;
+  }
+
+  /* Button variants in dark mode */
+  .dark .btn-primary {
+    @apply bg-primary text-primary-foreground hover:bg-primary/90;
+  }
+
+  .dark .btn-secondary {
+    @apply bg-secondary text-secondary-foreground hover:bg-secondary/80;
+  }
+
+  .dark .btn-outline {
+    @apply border border-input bg-background text-foreground hover:bg-accent hover:text-accent-foreground;
+  }
 }
 
-/* Responsive utilities and mobile optimizations */
+/* Responsive utilities */
 @layer utilities {
   .overflow-x-auto {
     overflow-x: auto;
@@ -232,7 +242,7 @@
     min-width: 0;
   }
   
-  /* Responsive container that prevents overflow */
+  /* Responsive container */
   .responsive-container {
     width: 100%;
     max-width: 100vw;
@@ -259,13 +269,13 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 150px;
+    max-width: 120px;
   }
   
   @screen sm {
     .responsive-table th,
     .responsive-table td {
-      max-width: 200px;
+      max-width: 150px;
     }
   }
   
@@ -277,20 +287,20 @@
     }
   }
   
-  /* Card stack on mobile */
+  /* Card layouts */
   .card-stack {
-    @apply space-y-4;
+    @apply space-y-3;
   }
   
   @screen sm {
     .card-stack {
-      @apply grid grid-cols-1 sm:grid-cols-2 gap-4 space-y-0;
+      @apply grid grid-cols-1 sm:grid-cols-2 gap-3 space-y-0;
     }
   }
   
   @screen lg {
     .card-stack {
-      @apply grid-cols-3;
+      @apply grid-cols-3 gap-4;
     }
   }
   
@@ -302,13 +312,14 @@
   
   /* Mobile-first responsive grid */
   .responsive-grid {
-    @apply grid gap-4;
+    @apply grid gap-3;
     grid-template-columns: 1fr;
   }
   
   @screen sm {
     .responsive-grid {
       grid-template-columns: repeat(2, 1fr);
+      @apply gap-4;
     }
   }
   
@@ -324,7 +335,7 @@
     }
   }
   
-  /* Responsive text sizing */
+  /* Responsive text and spacing */
   .responsive-text {
     @apply text-sm sm:text-base lg:text-lg;
   }
@@ -333,18 +344,15 @@
     @apply text-lg sm:text-xl lg:text-2xl xl:text-3xl;
   }
   
-  /* Mobile-friendly buttons */
   .mobile-button {
     @apply px-3 py-2 text-sm sm:px-4 sm:py-2 sm:text-base;
-    min-height: 44px; /* Touch-friendly minimum height */
+    min-height: 44px;
   }
   
-  /* Responsive spacing */
   .responsive-spacing {
-    @apply space-y-2 sm:space-y-4 lg:space-y-6;
+    @apply space-y-2 sm:space-y-3 lg:space-y-4;
   }
   
-  /* Hide elements on small screens */
   .hide-mobile {
     @apply hidden sm:block;
   }
@@ -353,14 +361,12 @@
     @apply block sm:hidden;
   }
   
-  /* Responsive padding */
   .responsive-padding {
-    @apply p-2 sm:p-4 lg:p-6;
+    @apply p-2 sm:p-3 lg:p-4;
   }
   
-  /* Safe mobile viewport */
   .mobile-safe {
     min-height: 100vh;
-    min-height: 100dvh; /* Dynamic viewport height for mobile browsers */
+    min-height: 100dvh;
   }
 }

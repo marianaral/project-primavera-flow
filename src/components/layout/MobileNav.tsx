@@ -34,9 +34,12 @@ const MobileNav = () => {
               <Menu className="h-4 w-4" />
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="w-64 bg-card text-card-foreground border-border">
+          <SheetContent 
+            side="left" 
+            className="w-64 bg-background text-foreground border-border dark:bg-background dark:text-foreground dark:border-border"
+          >
             <SheetHeader>
-              <SheetTitle className="flex items-center gap-2 text-foreground">
+              <SheetTitle className="flex items-center gap-2 text-foreground dark:text-foreground">
                 <Bot className="h-6 w-6 text-primary" />
                 ProjectFlow
               </SheetTitle>
@@ -49,8 +52,8 @@ const MobileNav = () => {
                     to={item.to}
                     onClick={handleNavClick}
                     className={({ isActive }) =>
-                      `flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:bg-muted text-foreground ${
-                        isActive ? "bg-primary/20 text-primary font-semibold" : ""
+                      `flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:bg-muted dark:hover:bg-muted text-foreground dark:text-foreground ${
+                        isActive ? "bg-primary/20 text-primary font-semibold dark:bg-primary/20 dark:text-primary" : ""
                       }`
                     }
                   >
@@ -59,9 +62,9 @@ const MobileNav = () => {
                   </NavLink>
                 ))}
               </nav>
-              <div className="mt-4 pt-4 border-t border-border">
+              <div className="mt-4 pt-4 border-t border-border dark:border-border">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Tema</span>
+                  <span className="text-sm text-muted-foreground dark:text-muted-foreground">Tema</span>
                   <ThemeToggle />
                 </div>
               </div>
