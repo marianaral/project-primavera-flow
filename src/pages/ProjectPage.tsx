@@ -85,64 +85,66 @@ const ProjectPage = () => {
   }
 
   return (
-    <div className="animate-fade-in space-y-6 w-full overflow-hidden">
+    <div className="animate-fade-in space-y-4 sm:space-y-6 w-full max-w-full overflow-x-hidden">
       <Link to="/projects" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
         <ArrowLeft className="h-4 w-4" />
         Volver a Proyectos
       </Link>
       
       <div className="space-y-2">
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{project.name}</h1>
-        <p className="text-muted-foreground text-sm sm:text-base">{project.description}</p>
+        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight break-words">{project.name}</h1>
+        <p className="text-muted-foreground text-sm sm:text-base break-words">{project.description}</p>
       </div>
 
       <Tabs defaultValue="overview" className="w-full">
-        <div className="overflow-x-auto">
-          <TabsList className="grid w-full grid-cols-6 h-auto min-w-[600px] sm:min-w-0">
-            <TabsTrigger value="overview" className="text-xs sm:text-sm px-2 py-2 whitespace-nowrap">
+        <div className="w-full overflow-x-auto">
+          <TabsList className="grid w-full grid-cols-6 h-auto min-w-[600px] lg:min-w-0 mb-4">
+            <TabsTrigger value="overview" className="text-xs sm:text-sm px-1 sm:px-2 py-2 whitespace-nowrap">
               Información
             </TabsTrigger>
-            <TabsTrigger value="tasks" className="text-xs sm:text-sm px-2 py-2 whitespace-nowrap">
+            <TabsTrigger value="tasks" className="text-xs sm:text-sm px-1 sm:px-2 py-2 whitespace-nowrap">
               Tareas
             </TabsTrigger>
-            <TabsTrigger value="requirements" className="text-xs sm:text-sm px-2 py-2 whitespace-nowrap">
+            <TabsTrigger value="requirements" className="text-xs sm:text-sm px-1 sm:px-2 py-2 whitespace-nowrap">
               Requisitos
             </TabsTrigger>
-            <TabsTrigger value="expenses" className="text-xs sm:text-sm px-2 py-2 whitespace-nowrap">
+            <TabsTrigger value="expenses" className="text-xs sm:text-sm px-1 sm:px-2 py-2 whitespace-nowrap">
               Gastos
             </TabsTrigger>
-            <TabsTrigger value="finances" className="text-xs sm:text-sm px-2 py-2 whitespace-nowrap">
+            <TabsTrigger value="finances" className="text-xs sm:text-sm px-1 sm:px-2 py-2 whitespace-nowrap">
               Finanzas
             </TabsTrigger>
-            <TabsTrigger value="metrics" className="text-xs sm:text-sm px-2 py-2 whitespace-nowrap">
+            <TabsTrigger value="metrics" className="text-xs sm:text-sm px-1 sm:px-2 py-2 whitespace-nowrap">
               Métricas
             </TabsTrigger>
           </TabsList>
         </div>
         
-        <TabsContent value="overview" className="mt-6">
-          <ProjectOverview project={project} />
-        </TabsContent>
-        
-        <TabsContent value="tasks" className="mt-6">
-          <ProjectTasks project={project} />
-        </TabsContent>
-        
-        <TabsContent value="requirements" className="mt-6">
-          <ProjectRequirements project={project} />
-        </TabsContent>
-        
-        <TabsContent value="expenses" className="mt-6">
-          <ProjectExpenses project={project} />
-        </TabsContent>
-        
-        <TabsContent value="finances" className="mt-6">
-          <ProjectFinances project={project} />
-        </TabsContent>
-        
-        <TabsContent value="metrics" className="mt-6">
-          <ProjectMetrics project={project} />
-        </TabsContent>
+        <div className="w-full max-w-full overflow-x-hidden">
+          <TabsContent value="overview" className="mt-4 sm:mt-6">
+            <ProjectOverview project={project} />
+          </TabsContent>
+          
+          <TabsContent value="tasks" className="mt-4 sm:mt-6">
+            <ProjectTasks project={project} />
+          </TabsContent>
+          
+          <TabsContent value="requirements" className="mt-4 sm:mt-6">
+            <ProjectRequirements project={project} />
+          </TabsContent>
+          
+          <TabsContent value="expenses" className="mt-4 sm:mt-6">
+            <ProjectExpenses project={project} />
+          </TabsContent>
+          
+          <TabsContent value="finances" className="mt-4 sm:mt-6">
+            <ProjectFinances project={project} />
+          </TabsContent>
+          
+          <TabsContent value="metrics" className="mt-4 sm:mt-6">
+            <ProjectMetrics project={project} />
+          </TabsContent>
+        </div>
       </Tabs>
     </div>
   );

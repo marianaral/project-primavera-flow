@@ -295,35 +295,36 @@ const Projects = () => {
   }
 
   return (
-    <div className="animate-fade-in space-y-6">
+    <div className="animate-fade-in space-y-4 sm:space-y-6 w-full max-w-full overflow-x-hidden">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">Proyectos</h1>
-          <p className="text-muted-foreground">Gestiona todos tus proyectos desde aquí</p>
+      <div className="flex flex-col gap-3 sm:gap-4 lg:flex-row lg:justify-between lg:items-center">
+        <div className="min-w-0">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground truncate">Proyectos</h1>
+          <p className="text-muted-foreground text-sm sm:text-base">Gestiona todos tus proyectos desde aquí</p>
         </div>
-        <Button onClick={() => setIsProjectFormOpen(true)}>
+        <Button onClick={() => setIsProjectFormOpen(true)} className="mobile-button w-full sm:w-auto">
           <PlusCircle className="mr-2 h-4 w-4" />
           Nuevo Proyecto
         </Button>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <div className="bg-card rounded-lg border p-4">
-          <div className="text-sm text-muted-foreground">Total de Proyectos</div>
-          <div className="text-2xl font-bold text-foreground">{kpis.totalProjects}</div>
+      {/* KPI Cards */}
+      <div className="responsive-grid">
+        <div className="bg-card rounded-lg border p-3 sm:p-4">
+          <div className="text-xs sm:text-sm text-muted-foreground">Total de Proyectos</div>
+          <div className="text-xl sm:text-2xl font-bold text-foreground">{kpis.totalProjects}</div>
         </div>
-        <div className="bg-card rounded-lg border p-4">
-          <div className="text-sm text-muted-foreground">Proyectos Activos</div>
-          <div className="text-2xl font-bold text-blue-400">{kpis.activeProjects}</div>
+        <div className="bg-card rounded-lg border p-3 sm:p-4">
+          <div className="text-xs sm:text-sm text-muted-foreground">Proyectos Activos</div>
+          <div className="text-xl sm:text-2xl font-bold text-blue-400">{kpis.activeProjects}</div>
         </div>
-        <div className="bg-card rounded-lg border p-4">
-          <div className="text-sm text-muted-foreground">Proyectos Finalizados</div>
-          <div className="text-2xl font-bold text-green-400">{kpis.finishedProjects}</div>
+        <div className="bg-card rounded-lg border p-3 sm:p-4">
+          <div className="text-xs sm:text-sm text-muted-foreground">Proyectos Finalizados</div>
+          <div className="text-xl sm:text-2xl font-bold text-green-400">{kpis.finishedProjects}</div>
         </div>
-        <div className="bg-card rounded-lg border p-4">
-          <div className="text-sm text-muted-foreground">Utilización Presupuesto</div>
-          <div className="text-2xl font-bold text-foreground">
+        <div className="bg-card rounded-lg border p-3 sm:p-4">
+          <div className="text-xs sm:text-sm text-muted-foreground">Utilización Presupuesto</div>
+          <div className="text-xl sm:text-2xl font-bold text-foreground">
             {kpis.budgetUtilization.toFixed(1)}%
           </div>
           <div className="text-xs text-muted-foreground">
@@ -332,18 +333,19 @@ const Projects = () => {
         </div>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="relative flex-1">
+      {/* Search and Filter */}
+      <div className="flex flex-col gap-3 sm:gap-4 lg:flex-row">
+        <div className="relative flex-1 min-w-0">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Buscar proyectos por nombre o descripción..."
+            placeholder="Buscar proyectos por nombre..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
+            className="pl-10 text-sm"
           />
         </div>
         <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as ProjectStatus | "all")}>
-          <SelectTrigger className="w-full sm:w-[200px]">
+          <SelectTrigger className="w-full lg:w-[200px]">
             <Filter className="h-4 w-4 mr-2" />
             <SelectValue placeholder="Filtrar por estado" />
           </SelectTrigger>
@@ -351,8 +353,8 @@ const Projects = () => {
             {statusOptions.map((option) => (
               <SelectItem key={option.value} value={option.value}>
                 <div className="flex items-center justify-between w-full">
-                  <span>{option.label}</span>
-                  <Badge variant="secondary" className="ml-2">
+                  <span className="text-sm">{option.label}</span>
+                  <Badge variant="secondary" className="ml-2 text-xs">
                     {option.count}
                   </Badge>
                 </div>
@@ -362,9 +364,10 @@ const Projects = () => {
         </Select>
       </div>
 
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-foreground">
+      {/* Project List */}
+      <div className="space-y-3 sm:space-y-4">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <h2 className="text-base sm:text-lg font-semibold text-foreground">
             {filteredProjects.length === projectList.length 
               ? `Todos los proyectos (${projectList.length})`
               : `${filteredProjects.length} de ${projectList.length} proyectos`
@@ -375,6 +378,7 @@ const Projects = () => {
               variant="ghost" 
               size="sm"
               onClick={() => setSearchTerm("")}
+              className="w-full sm:w-auto"
             >
               Limpiar búsqueda
             </Button>
@@ -383,7 +387,7 @@ const Projects = () => {
 
         {filteredProjects.length === 0 ? (
           <div className="text-center py-12">
-            <div className="text-muted-foreground">
+            <div className="text-muted-foreground text-sm sm:text-base">
               {searchTerm || statusFilter !== "all" 
                 ? "No se encontraron proyectos con los criterios seleccionados."
                 : "No hay proyectos disponibles."
@@ -391,11 +395,11 @@ const Projects = () => {
             </div>
           </div>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="card-stack">
             {filteredProjects.map((project) => (
               <div key={project.id} className="relative group">
                 <ProjectCard project={project} />
-                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-background/80 backdrop-blur-sm rounded-md p-1 flex gap-1">
+                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-background/90 backdrop-blur-sm rounded-md p-1 flex gap-1">
                   <Button
                     variant="outline"
                     size="sm"
