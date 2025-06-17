@@ -34,7 +34,7 @@ const MobileNav = () => {
               <Menu className="h-4 w-4" />
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="w-64 bg-card text-card-foreground">
+          <SheetContent side="left" className="w-64 bg-card text-card-foreground border-border">
             <SheetHeader>
               <SheetTitle className="flex items-center gap-2 text-foreground">
                 <Bot className="h-6 w-6 text-primary" />

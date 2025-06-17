@@ -2,7 +2,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle, Clock, AlertCircle, Pencil, Trash2 } from "lucide-react";
+import { CheckCircle, Clock, AlertTriangle, Edit, Trash2, Eye } from "lucide-react";
 
 interface Task {
   id: string;
@@ -12,10 +12,9 @@ interface Task {
   assignee: string;
   dueDate: string;
   priority: "low" | "medium" | "high";
-  relatedRequirements: string[];
   estimatedHours: number;
-  completedHours: number;
-  tags: string[];
+  actualHours: number;
+  tags: string;
 }
 
 export type TaskViewType = "status-columns" | "priority-columns";
@@ -36,7 +35,7 @@ const TaskColumnView = ({ tasks, viewType, onTaskClick, onEditTask, onDeleteTask
       case "in-progress":
         return <Clock className="h-4 w-4 text-blue-400" />;
       case "pending":
-        return <AlertCircle className="h-4 w-4 text-yellow-400" />;
+        return <AlertTriangle className="h-4 w-4 text-yellow-400" />;
     }
   };
 
@@ -88,22 +87,25 @@ const TaskColumnView = ({ tasks, viewType, onTaskClick, onEditTask, onDeleteTask
     ];
 
     return (
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
         {statuses.map((status) => {
           const statusTasks = tasks.filter(task => task.status === status.key);
           return (
-            <div key={status.key} className={`border-t-4 ${status.color} rounded-lg bg-muted/20 p-4`}>
+            <div key={status.key} className={`border-t-4 ${status.color} rounded-lg bg-muted/20 p-3 sm:p-4`}>
               <div className="flex items-center gap-2 mb-4">
                 {getStatusIcon(status.key)}
-                <h3 className="font-semibold">{status.label}</h3>
+                <h3 className="font-semibold text-foreground">{status.label}</h3>
                 <Badge variant="secondary">{statusTasks.length}</Badge>
               </div>
               <div className="space-y-3">
                 {statusTasks.map((task) => (
-                  <Card key={task.id} className="cursor-pointer hover:shadow-md transition-shadow">
+                  <Card key={task.id} className="cursor-pointer hover:shadow-md transition-shadow bg-card">
                     <CardHeader className="pb-2">
                       <div className="flex items-start justify-between">
-                        <CardTitle className="text-sm font-medium" onClick={() => onTaskClick(task)}>
+                        <CardTitle 
+                          className="text-sm font-medium text-card-foreground cursor-pointer" 
+                          onClick={() => onTaskClick(task)}
+                        >
                           {task.title}
                         </CardTitle>
                         <div className="flex gap-1">
@@ -112,10 +114,22 @@ const TaskColumnView = ({ tasks, viewType, onTaskClick, onEditTask, onDeleteTask
                             size="sm"
                             onClick={(e) => {
                               e.stopPropagation();
+                              onTaskClick(task);
+                            }}
+                            className="h-6 w-6 p-0"
+                          >
+                            <Eye className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
                               onEditTask(task);
                             }}
+                            className="h-6 w-6 p-0"
                           >
-                            <Pencil className="h-3 w-3" />
+                            <Edit className="h-3 w-3" />
                           </Button>
                           <Button
                             variant="ghost"
@@ -124,6 +138,7 @@ const TaskColumnView = ({ tasks, viewType, onTaskClick, onEditTask, onDeleteTask
                               e.stopPropagation();
                               onDeleteTask(task);
                             }}
+                            className="h-6 w-6 p-0"
                           >
                             <Trash2 className="h-3 w-3" />
                           </Button>
@@ -132,12 +147,15 @@ const TaskColumnView = ({ tasks, viewType, onTaskClick, onEditTask, onDeleteTask
                     </CardHeader>
                     <CardContent className="pt-0">
                       <p className="text-xs text-muted-foreground mb-2 line-clamp-2">{task.description}</p>
-                      <div className="flex items-center justify-between text-xs">
-                        <span>{task.assignee}</span>
+                      <div className="flex items-center justify-between text-xs mb-2">
+                        <span className="text-card-foreground">{task.assignee}</span>
                         {getPriorityBadge(task.priority)}
                       </div>
-                      <div className="mt-2 text-xs text-muted-foreground">
-                        {new Date(task.dueDate).toLocaleDateString('es-ES')}
+                      <div className="flex items-center justify-between text-xs text-muted-foreground">
+                        <span>
+                          {task.dueDate ? new Date(task.dueDate).toLocaleDateString('es-ES') : 'Sin fecha'}
+                        </span>
+                        <span>{task.estimatedHours}h / {task.actualHours}h</span>
                       </div>
                     </CardContent>
                   </Card>
@@ -158,21 +176,24 @@ const TaskColumnView = ({ tasks, viewType, onTaskClick, onEditTask, onDeleteTask
     ];
 
     return (
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
         {priorities.map((priority) => {
           const priorityTasks = tasks.filter(task => task.priority === priority.key);
           return (
-            <div key={priority.key} className={`border-t-4 ${priority.color} rounded-lg bg-muted/20 p-4`}>
+            <div key={priority.key} className={`border-t-4 ${priority.color} rounded-lg bg-muted/20 p-3 sm:p-4`}>
               <div className="flex items-center gap-2 mb-4">
-                <h3 className="font-semibold">{priority.label}</h3>
+                <h3 className="font-semibold text-foreground">{priority.label}</h3>
                 <Badge variant="secondary">{priorityTasks.length}</Badge>
               </div>
               <div className="space-y-3">
                 {priorityTasks.map((task) => (
-                  <Card key={task.id} className="cursor-pointer hover:shadow-md transition-shadow">
+                  <Card key={task.id} className="cursor-pointer hover:shadow-md transition-shadow bg-card">
                     <CardHeader className="pb-2">
                       <div className="flex items-start justify-between">
-                        <CardTitle className="text-sm font-medium" onClick={() => onTaskClick(task)}>
+                        <CardTitle 
+                          className="text-sm font-medium text-card-foreground cursor-pointer" 
+                          onClick={() => onTaskClick(task)}
+                        >
                           {task.title}
                         </CardTitle>
                         <div className="flex gap-1">
@@ -181,10 +202,22 @@ const TaskColumnView = ({ tasks, viewType, onTaskClick, onEditTask, onDeleteTask
                             size="sm"
                             onClick={(e) => {
                               e.stopPropagation();
+                              onTaskClick(task);
+                            }}
+                            className="h-6 w-6 p-0"
+                          >
+                            <Eye className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
                               onEditTask(task);
                             }}
+                            className="h-6 w-6 p-0"
                           >
-                            <Pencil className="h-3 w-3" />
+                            <Edit className="h-3 w-3" />
                           </Button>
                           <Button
                             variant="ghost"
@@ -193,6 +226,7 @@ const TaskColumnView = ({ tasks, viewType, onTaskClick, onEditTask, onDeleteTask
                               e.stopPropagation();
                               onDeleteTask(task);
                             }}
+                            className="h-6 w-6 p-0"
                           >
                             <Trash2 className="h-3 w-3" />
                           </Button>
@@ -201,12 +235,15 @@ const TaskColumnView = ({ tasks, viewType, onTaskClick, onEditTask, onDeleteTask
                     </CardHeader>
                     <CardContent className="pt-0">
                       <p className="text-xs text-muted-foreground mb-2 line-clamp-2">{task.description}</p>
-                      <div className="flex items-center justify-between text-xs">
-                        <span>{task.assignee}</span>
+                      <div className="flex items-center justify-between text-xs mb-2">
+                        <span className="text-card-foreground">{task.assignee}</span>
                         {getStatusBadge(task.status)}
                       </div>
-                      <div className="mt-2 text-xs text-muted-foreground">
-                        {new Date(task.dueDate).toLocaleDateString('es-ES')}
+                      <div className="flex items-center justify-between text-xs text-muted-foreground">
+                        <span>
+                          {task.dueDate ? new Date(task.dueDate).toLocaleDateString('es-ES') : 'Sin fecha'}
+                        </span>
+                        <span>{task.estimatedHours}h / {task.actualHours}h</span>
                       </div>
                     </CardContent>
                   </Card>

@@ -7,7 +7,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Clock, User, Flag } from "lucide-react";
+import { Calendar, Clock, User, Flag, Timer } from "lucide-react";
 
 interface Task {
   id: string;
@@ -18,6 +18,7 @@ interface Task {
   assignee: string;
   dueDate: string;
   estimatedHours: number;
+  actualHours: number;
   tags: string;
 }
 
@@ -72,7 +73,7 @@ const TaskDetailModal = ({ task, isOpen, onClose }: TaskDetailModalProps) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl bg-card text-card-foreground">
+      <DialogContent className="max-w-2xl bg-card text-card-foreground border-border">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold text-foreground">{task.title}</DialogTitle>
           <DialogDescription className="text-muted-foreground">
@@ -109,6 +110,13 @@ const TaskDetailModal = ({ task, isOpen, onClose }: TaskDetailModalProps) => {
                 </span>
               </div>
 
+              <div className="flex items-center gap-2">
+                <Timer className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm text-foreground">
+                  <strong>Horas reales:</strong> {task.actualHours}h
+                </span>
+              </div>
+
               {task.dueDate && (
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4 text-muted-foreground" />
@@ -124,6 +132,25 @@ const TaskDetailModal = ({ task, isOpen, onClose }: TaskDetailModalProps) => {
                   <strong>Prioridad:</strong> {getPriorityBadge(task.priority)}
                 </span>
               </div>
+
+              {task.estimatedHours > 0 && (
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-foreground">
+                    <strong>Variación:</strong> 
+                    {task.actualHours > task.estimatedHours ? (
+                      <span className="text-red-400 ml-1">
+                        +{task.actualHours - task.estimatedHours}h
+                      </span>
+                    ) : task.actualHours < task.estimatedHours ? (
+                      <span className="text-green-400 ml-1">
+                        -{task.estimatedHours - task.actualHours}h
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground ml-1">Sin variación</span>
+                    )}
+                  </span>
+                </div>
+              )}
             </div>
 
             {task.tags && (

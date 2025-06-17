@@ -85,7 +85,7 @@ const ProjectPage = () => {
   }
 
   return (
-    <div className="animate-fade-in space-y-6">
+    <div className="animate-fade-in space-y-6 w-full overflow-hidden">
       <Link to="/projects" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
         <ArrowLeft className="h-4 w-4" />
         Volver a Proyectos
@@ -97,26 +97,28 @@ const ProjectPage = () => {
       </div>
 
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6 h-auto">
-          <TabsTrigger value="overview" className="text-xs sm:text-sm px-2 py-2">
-            Información
-          </TabsTrigger>
-          <TabsTrigger value="tasks" className="text-xs sm:text-sm px-2 py-2">
-            Tareas
-          </TabsTrigger>
-          <TabsTrigger value="requirements" className="text-xs sm:text-sm px-2 py-2">
-            Requisitos
-          </TabsTrigger>
-          <TabsTrigger value="expenses" className="text-xs sm:text-sm px-2 py-2">
-            Gastos
-          </TabsTrigger>
-          <TabsTrigger value="finances" className="text-xs sm:text-sm px-2 py-2">
-            Finanzas
-          </TabsTrigger>
-          <TabsTrigger value="metrics" className="text-xs sm:text-sm px-2 py-2">
-            Métricas
-          </TabsTrigger>
-        </TabsList>
+        <div className="overflow-x-auto">
+          <TabsList className="grid w-full grid-cols-6 h-auto min-w-[600px] sm:min-w-0">
+            <TabsTrigger value="overview" className="text-xs sm:text-sm px-2 py-2 whitespace-nowrap">
+              Información
+            </TabsTrigger>
+            <TabsTrigger value="tasks" className="text-xs sm:text-sm px-2 py-2 whitespace-nowrap">
+              Tareas
+            </TabsTrigger>
+            <TabsTrigger value="requirements" className="text-xs sm:text-sm px-2 py-2 whitespace-nowrap">
+              Requisitos
+            </TabsTrigger>
+            <TabsTrigger value="expenses" className="text-xs sm:text-sm px-2 py-2 whitespace-nowrap">
+              Gastos
+            </TabsTrigger>
+            <TabsTrigger value="finances" className="text-xs sm:text-sm px-2 py-2 whitespace-nowrap">
+              Finanzas
+            </TabsTrigger>
+            <TabsTrigger value="metrics" className="text-xs sm:text-sm px-2 py-2 whitespace-nowrap">
+              Métricas
+            </TabsTrigger>
+          </TabsList>
+        </div>
         
         <TabsContent value="overview" className="mt-6">
           <ProjectOverview project={project} />

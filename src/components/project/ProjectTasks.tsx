@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Project } from "@/data/projects";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,6 +25,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import TaskForm from "./TaskForm";
 import TaskDetailModal from "./TaskDetailModal";
+import TaskViewControls from "./TaskViewControls";
+import TaskColumnView from "./TaskColumnView";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -36,6 +39,7 @@ interface Task {
   assignee: string;
   dueDate: string;
   estimatedHours: number;
+  actualHours: number;
   tags: string;
   project_id?: string;
 }
@@ -43,6 +47,8 @@ interface Task {
 interface ProjectTasksProps {
   project: Project;
 }
+
+type TaskViewType = "list" | "status-columns" | "priority-columns";
 
 const ProjectTasks = ({ project }: ProjectTasksProps) => {
   const { toast } = useToast();
@@ -54,6 +60,7 @@ const ProjectTasks = ({ project }: ProjectTasksProps) => {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
+  const [viewType, setViewType] = useState<TaskViewType>("list");
 
   useEffect(() => {
     fetchTasks();
@@ -85,6 +92,7 @@ const ProjectTasks = ({ project }: ProjectTasksProps) => {
         assignee: task.responsible || "",
         dueDate: task.deadline || "",
         estimatedHours: Number(task.estimated_hours) || 0,
+        actualHours: Number(task.actual_hours) || 0,
         tags: "", 
         project_id: task.project_id,
       })) || [];
@@ -114,6 +122,7 @@ const ProjectTasks = ({ project }: ProjectTasksProps) => {
           responsible: taskData.assignee,
           deadline: taskData.dueDate || null,
           estimated_hours: taskData.estimatedHours,
+          actual_hours: taskData.actualHours || 0,
           project_id: project.id,
         }])
         .select()
@@ -138,6 +147,7 @@ const ProjectTasks = ({ project }: ProjectTasksProps) => {
         assignee: data.responsible || "",
         dueDate: data.deadline || "",
         estimatedHours: Number(data.estimated_hours) || 0,
+        actualHours: Number(data.actual_hours) || 0,
         tags: taskData.tags,
         project_id: data.project_id,
       };
@@ -176,6 +186,7 @@ const ProjectTasks = ({ project }: ProjectTasksProps) => {
           responsible: taskData.assignee,
           deadline: taskData.dueDate || null,
           estimated_hours: taskData.estimatedHours,
+          actual_hours: taskData.actualHours || 0,
         })
         .eq('id', editingTask.id)
         .select()
@@ -200,6 +211,7 @@ const ProjectTasks = ({ project }: ProjectTasksProps) => {
         assignee: data.responsible || "",
         dueDate: data.deadline || "",
         estimatedHours: Number(data.estimated_hours) || 0,
+        actualHours: Number(data.actual_hours) || 0,
         tags: taskData.tags,
       };
 
@@ -331,18 +343,24 @@ const ProjectTasks = ({ project }: ProjectTasksProps) => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h3 className="text-lg font-semibold">Tareas del Proyecto</h3>
+    <div className="space-y-6 w-full overflow-hidden">
+      <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
+        <div className="min-w-0">
+          <h3 className="text-lg font-semibold truncate">Tareas del Proyecto</h3>
           <p className="text-muted-foreground text-sm">
             {completedTasks} de {tasks.length} tareas completadas ({completionPercentage.toFixed(0)}%)
           </p>
         </div>
-        <Button onClick={() => setIsFormOpen(true)} className="w-full sm:w-auto">
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Nueva Tarea
-        </Button>
+        <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-4">
+          <TaskViewControls
+            viewType={viewType}
+            onViewTypeChange={setViewType}
+          />
+          <Button onClick={() => setIsFormOpen(true)} className="w-full sm:w-auto">
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Nueva Tarea
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
@@ -370,85 +388,99 @@ const ProjectTasks = ({ project }: ProjectTasksProps) => {
         })}
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Lista de Tareas</CardTitle>
-          <CardDescription>
-            Gestiona todas las tareas del proyecto {project.name}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="min-w-[100px]">Estado</TableHead>
-                  <TableHead className="min-w-[150px]">Tarea</TableHead>
-                  <TableHead className="min-w-[100px]">Responsable</TableHead>
-                  <TableHead className="min-w-[100px]">Prioridad</TableHead>
-                  <TableHead className="min-w-[100px]">Fecha límite</TableHead>
-                  <TableHead className="min-w-[80px]">Horas est.</TableHead>
-                  <TableHead className="min-w-[120px]">Acciones</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {tasks.map((task) => (
-                  <TableRow key={task.id}>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        {getStatusIcon(task.status)}
-                        <div className="hidden sm:block">
-                          {getStatusBadge(task.status)}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div>
-                        <div className="font-medium">{task.title}</div>
-                        <div className="text-sm text-muted-foreground hidden sm:block">{task.description}</div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-sm">{task.assignee}</TableCell>
-                    <TableCell>{getPriorityBadge(task.priority)}</TableCell>
-                    <TableCell className="text-sm">
-                      {task.dueDate ? new Date(task.dueDate).toLocaleDateString('es-ES') : "-"}
-                    </TableCell>
-                    <TableCell className="text-sm">{task.estimatedHours}h</TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleViewTask(task)}
-                          className="h-8 w-8 p-0"
-                        >
-                          <Eye className="h-3 w-3" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleEditTask(task)}
-                          className="h-8 w-8 p-0"
-                        >
-                          <Edit className="h-3 w-3" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDeleteTask(task)}
-                          className="h-8 w-8 p-0"
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    </TableCell>
+      {viewType === "list" ? (
+        <Card className="w-full">
+          <CardHeader>
+            <CardTitle>Lista de Tareas</CardTitle>
+            <CardDescription>
+              Gestiona todas las tareas del proyecto {project.name}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="min-w-[80px]">Estado</TableHead>
+                    <TableHead className="min-w-[150px]">Tarea</TableHead>
+                    <TableHead className="min-w-[100px]">Responsable</TableHead>
+                    <TableHead className="min-w-[80px]">Prioridad</TableHead>
+                    <TableHead className="min-w-[100px]">Fecha límite</TableHead>
+                    <TableHead className="min-w-[80px]">H. Est.</TableHead>
+                    <TableHead className="min-w-[80px]">H. Real</TableHead>
+                    <TableHead className="min-w-[120px]">Acciones</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
+                </TableHeader>
+                <TableBody>
+                  {tasks.map((task) => (
+                    <TableRow key={task.id}>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          {getStatusIcon(task.status)}
+                          <div className="hidden sm:block">
+                            {getStatusBadge(task.status)}
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div>
+                          <div className="font-medium">{task.title}</div>
+                          <div className="text-sm text-muted-foreground hidden sm:block truncate max-w-[200px]">
+                            {task.description}
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-sm">{task.assignee}</TableCell>
+                      <TableCell>{getPriorityBadge(task.priority)}</TableCell>
+                      <TableCell className="text-sm">
+                        {task.dueDate ? new Date(task.dueDate).toLocaleDateString('es-ES') : "-"}
+                      </TableCell>
+                      <TableCell className="text-sm">{task.estimatedHours}h</TableCell>
+                      <TableCell className="text-sm">{task.actualHours}h</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleViewTask(task)}
+                            className="h-8 w-8 p-0"
+                          >
+                            <Eye className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEditTask(task)}
+                            className="h-8 w-8 p-0"
+                          >
+                            <Edit className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDeleteTask(task)}
+                            className="h-8 w-8 p-0"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <TaskColumnView
+          tasks={tasks}
+          viewType={viewType}
+          onTaskClick={handleViewTask}
+          onEditTask={handleEditTask}
+          onDeleteTask={handleDeleteTask}
+        />
+      )}
 
       <TaskForm
         isOpen={isFormOpen}

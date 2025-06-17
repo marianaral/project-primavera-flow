@@ -39,7 +39,7 @@
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
     --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 75.1%;
+    --muted-foreground: 215 20.2% 65.1%;
     --accent: 217.2 32.6% 17.5%;
     --accent-foreground: 210 40% 98%;
     --destructive: 0 62.8% 30.6%;
@@ -152,5 +152,64 @@
   /* Fix sheet overlay in dark mode */
   .dark [data-radix-dialog-overlay] {
     @apply bg-black/80;
+  }
+
+  /* Fix project filter buttons in dark mode */
+  .dark button.bg-muted {
+    @apply bg-muted text-foreground;
+  }
+
+  .dark button.bg-primary {
+    @apply bg-primary text-primary-foreground;
+  }
+
+  /* Fix all text colors in dark mode for better visibility */
+  .dark .text-muted-foreground {
+    @apply text-muted-foreground;
+  }
+
+  /* Ensure proper dark mode for dialogs and forms */
+  .dark [data-radix-dialog-content] {
+    background-color: hsl(var(--card));
+    color: hsl(var(--card-foreground));
+    border-color: hsl(var(--border));
+  }
+}
+
+/* Responsive utilities */
+@layer utilities {
+  .overflow-x-auto {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .min-w-0 {
+    min-width: 0;
+  }
+  
+  /* Table responsiveness */
+  .responsive-table {
+    @apply overflow-x-auto;
+  }
+  
+  .responsive-table table {
+    @apply min-w-full;
+  }
+  
+  /* Card stack on mobile */
+  .card-stack {
+    @apply space-y-4;
+  }
+  
+  @screen sm {
+    .card-stack {
+      @apply grid grid-cols-2 gap-4 space-y-0;
+    }
+  }
+  
+  @screen lg {
+    .card-stack {
+      @apply grid-cols-3;
+    }
   }
 }
