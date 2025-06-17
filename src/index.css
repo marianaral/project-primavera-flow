@@ -154,18 +154,20 @@
     @apply bg-black/80;
   }
 
-  /* Fix project filter buttons in dark mode */
+  /* Fix project filter buttons in dark mode - use direct CSS to avoid circular dependency */
   .dark button.bg-muted {
-    @apply bg-muted text-foreground;
+    background-color: hsl(var(--muted));
+    color: hsl(var(--foreground));
   }
 
   .dark button.bg-primary {
-    @apply bg-primary text-primary-foreground;
+    background-color: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
   }
 
   /* Fix all text colors in dark mode for better visibility */
   .dark .text-muted-foreground {
-    @apply text-muted-foreground;
+    color: hsl(var(--muted-foreground));
   }
 
   /* Ensure proper dark mode for dialogs and forms */

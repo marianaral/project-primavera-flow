@@ -92,7 +92,7 @@ const ProjectTasks = ({ project }: ProjectTasksProps) => {
         assignee: task.responsible || "",
         dueDate: task.deadline || "",
         estimatedHours: Number(task.estimated_hours) || 0,
-        actualHours: Number(task.actual_hours) || 0,
+        actualHours: Number(task.actual_hours || 0),
         tags: "", 
         project_id: task.project_id,
       })) || [];
@@ -147,7 +147,7 @@ const ProjectTasks = ({ project }: ProjectTasksProps) => {
         assignee: data.responsible || "",
         dueDate: data.deadline || "",
         estimatedHours: Number(data.estimated_hours) || 0,
-        actualHours: Number(data.actual_hours) || 0,
+        actualHours: Number(data.actual_hours || 0),
         tags: taskData.tags,
         project_id: data.project_id,
       };
@@ -211,7 +211,7 @@ const ProjectTasks = ({ project }: ProjectTasksProps) => {
         assignee: data.responsible || "",
         dueDate: data.deadline || "",
         estimatedHours: Number(data.estimated_hours) || 0,
-        actualHours: Number(data.actual_hours) || 0,
+        actualHours: Number(data.actual_hours || 0),
         tags: taskData.tags,
       };
 
