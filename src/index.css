@@ -205,7 +205,16 @@
   .dark input[type="number"],
   .dark input[type="date"],
   .dark textarea {
-    @apply bg-background border-border text-foreground placeholder:text-muted-foreground;
+    @apply bg-background border-border text-foreground;
+  }
+
+  .dark input[type="text"]::placeholder,
+  .dark input[type="email"]::placeholder,
+  .dark input[type="password"]::placeholder,
+  .dark input[type="number"]::placeholder,
+  .dark input[type="date"]::placeholder,
+  .dark textarea::placeholder {
+    color: hsl(var(--muted-foreground));
   }
 
   .dark input[type="text"]:focus,
