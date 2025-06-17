@@ -52,7 +52,7 @@
 
 @layer base {
   * {
-    @apply border-border;
+    border-color: hsl(var(--border));
   }
   
   html {
@@ -60,7 +60,9 @@
   }
   
   body {
-    @apply bg-background text-foreground antialiased;
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    -webkit-font-smoothing: antialiased;
     font-family: 'Inter', sans-serif;
     overflow-x: hidden;
     width: 100%;
@@ -81,7 +83,9 @@
   /* Dialog and modal backgrounds in dark mode */
   .dark [role="dialog"],
   .dark [data-radix-dialog-content] {
-    @apply bg-card text-card-foreground border-border;
+    background-color: hsl(var(--card));
+    color: hsl(var(--card-foreground));
+    border-color: hsl(var(--border));
     color-scheme: dark;
   }
   
@@ -89,7 +93,9 @@
   .dark input,
   .dark textarea,
   .dark select {
-    @apply bg-input text-foreground border-border;
+    background-color: hsl(var(--input));
+    color: hsl(var(--foreground));
+    border-color: hsl(var(--border));
     color-scheme: dark;
   }
   
@@ -97,33 +103,36 @@
   .dark [data-radix-select-content],
   .dark [data-radix-dropdown-menu-content],
   .dark [data-radix-popover-content] {
-    @apply bg-popover text-popover-foreground border-border;
-    color-scheme: dark;
+    background-color: hsl(var(--popover));
+    color: hsl(var(--popover-foreground));
+    border-color: hsl(var(--border));
   }
   
   /* Sheet/drawer content */
   .dark [data-radix-dialog-content],
   .dark [data-vaul-drawer],
   .dark [data-vaul-drawer-content] {
-    @apply bg-card text-card-foreground border-border;
-    color-scheme: dark;
+    background-color: hsl(var(--card));
+    color: hsl(var(--card-foreground));
+    border-color: hsl(var(--border));
   }
   
   /* Labels and text in dark mode */
   .dark label {
-    @apply text-foreground;
+    color: hsl(var(--foreground));
   }
   
   /* Menu items */
   .dark [data-radix-collection-item],
   .dark [data-radix-select-item],
   .dark [data-radix-dropdown-menu-item] {
-    @apply text-foreground;
+    color: hsl(var(--foreground));
   }
   
   .dark [data-radix-select-item]:hover,
   .dark [data-radix-dropdown-menu-item]:hover {
-    @apply bg-accent text-accent-foreground;
+    background-color: hsl(var(--accent));
+    color: hsl(var(--accent-foreground));
   }
   
   /* Modal overlays */
@@ -134,29 +143,35 @@
 
   /* Icons in dark mode */
   .dark svg {
-    @apply text-foreground;
+    color: hsl(var(--foreground));
   }
 
   .dark button svg {
-    @apply text-foreground;
+    color: hsl(var(--foreground));
   }
 
   /* Select components */
   .dark [data-radix-select-trigger] {
-    @apply text-foreground bg-input border-border;
+    color: hsl(var(--foreground));
+    background-color: hsl(var(--input));
+    border-color: hsl(var(--border));
   }
 
   .dark [data-radix-select-trigger] svg {
-    @apply text-foreground;
+    color: hsl(var(--foreground));
   }
 
   /* Tabs in dark mode */
   .dark [data-radix-tabs-trigger] {
-    @apply text-foreground bg-transparent border-border;
+    color: hsl(var(--foreground));
+    background-color: transparent;
+    border-color: hsl(var(--border));
   }
 
   .dark [data-radix-tabs-trigger][data-state="active"] {
-    @apply bg-background text-foreground shadow-sm;
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
   }
 
   /* Project filter buttons */
@@ -177,25 +192,27 @@
   
   /* Table styling */
   .dark table {
-    @apply text-foreground;
+    color: hsl(var(--foreground));
   }
   
   .dark table th {
-    @apply text-foreground border-border;
+    color: hsl(var(--foreground));
+    border-color: hsl(var(--border));
   }
   
   .dark table td {
-    @apply text-foreground border-border;
+    color: hsl(var(--foreground));
+    border-color: hsl(var(--border));
   }
   
   /* Card hover states */
   .dark .card:hover {
-    @apply bg-card/80;
+    background-color: hsl(var(--card) / 0.8);
   }
   
   /* Badges in dark mode */
   .dark .badge {
-    @apply text-foreground;
+    color: hsl(var(--foreground));
   }
 
   /* Enhanced form support in dark mode */
@@ -205,7 +222,9 @@
   .dark input[type="number"],
   .dark input[type="date"],
   .dark textarea {
-    @apply bg-background border-border text-foreground;
+    background-color: hsl(var(--background));
+    border-color: hsl(var(--border));
+    color: hsl(var(--foreground));
   }
 
   .dark input[type="text"]::placeholder,
@@ -223,20 +242,38 @@
   .dark input[type="number"]:focus,
   .dark input[type="date"]:focus,
   .dark textarea:focus {
-    @apply border-ring ring-ring;
+    border-color: hsl(var(--ring));
+    box-shadow: 0 0 0 2px hsl(var(--ring));
   }
 
   /* Button variants in dark mode */
   .dark .btn-primary {
-    @apply bg-primary text-primary-foreground hover:bg-primary/90;
+    background-color: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+  }
+
+  .dark .btn-primary:hover {
+    background-color: hsl(var(--primary) / 0.9);
   }
 
   .dark .btn-secondary {
-    @apply bg-secondary text-secondary-foreground hover:bg-secondary/80;
+    background-color: hsl(var(--secondary));
+    color: hsl(var(--secondary-foreground));
+  }
+
+  .dark .btn-secondary:hover {
+    background-color: hsl(var(--secondary) / 0.8);
   }
 
   .dark .btn-outline {
-    @apply border border-input bg-background text-foreground hover:bg-accent hover:text-accent-foreground;
+    border: 1px solid hsl(var(--input));
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+  }
+
+  .dark .btn-outline:hover {
+    background-color: hsl(var(--accent));
+    color: hsl(var(--accent-foreground));
   }
 }
 
@@ -262,19 +299,19 @@
   
   /* Table responsiveness */
   .responsive-table {
-    @apply overflow-x-auto;
+    overflow-x: auto;
     width: 100%;
     max-width: 100%;
   }
   
   .responsive-table table {
-    @apply min-w-full;
+    min-width: 100%;
     width: 100%;
   }
   
   .responsive-table th,
   .responsive-table td {
-    @apply text-xs sm:text-sm;
+    font-size: 0.75rem;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -284,6 +321,7 @@
   @screen sm {
     .responsive-table th,
     .responsive-table td {
+      font-size: 0.875rem;
       max-width: 150px;
     }
   }
@@ -298,37 +336,43 @@
   
   /* Card layouts */
   .card-stack {
-    @apply space-y-3;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
   }
   
   @screen sm {
     .card-stack {
-      @apply grid grid-cols-1 sm:grid-cols-2 gap-3 space-y-0;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.75rem;
     }
   }
   
   @screen lg {
     .card-stack {
-      @apply grid-cols-3 gap-4;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
     }
   }
   
   @screen xl {
     .card-stack {
-      @apply grid-cols-4;
+      grid-template-columns: repeat(4, 1fr);
     }
   }
   
   /* Mobile-first responsive grid */
   .responsive-grid {
-    @apply grid gap-3;
+    display: grid;
+    gap: 0.75rem;
     grid-template-columns: 1fr;
   }
   
   @screen sm {
     .responsive-grid {
       grid-template-columns: repeat(2, 1fr);
-      @apply gap-4;
+      gap: 1rem;
     }
   }
   
@@ -346,32 +390,108 @@
   
   /* Responsive text and spacing */
   .responsive-text {
-    @apply text-sm sm:text-base lg:text-lg;
+    font-size: 0.875rem;
+  }
+  
+  @screen sm {
+    .responsive-text {
+      font-size: 1rem;
+    }
+  }
+  
+  @screen lg {
+    .responsive-text {
+      font-size: 1.125rem;
+    }
   }
   
   .responsive-title {
-    @apply text-lg sm:text-xl lg:text-2xl xl:text-3xl;
+    font-size: 1.125rem;
+  }
+  
+  @screen sm {
+    .responsive-title {
+      font-size: 1.25rem;
+    }
+  }
+  
+  @screen lg {
+    .responsive-title {
+      font-size: 1.5rem;
+    }
+  }
+  
+  @screen xl {
+    .responsive-title {
+      font-size: 1.875rem;
+    }
   }
   
   .mobile-button {
-    @apply px-3 py-2 text-sm sm:px-4 sm:py-2 sm:text-base;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
     min-height: 44px;
   }
   
+  @screen sm {
+    .mobile-button {
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+    }
+  }
+  
   .responsive-spacing {
-    @apply space-y-2 sm:space-y-3 lg:space-y-4;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  @screen sm {
+    .responsive-spacing {
+      gap: 0.75rem;
+    }
+  }
+  
+  @screen lg {
+    .responsive-spacing {
+      gap: 1rem;
+    }
   }
   
   .hide-mobile {
-    @apply hidden sm:block;
+    display: none;
+  }
+  
+  @screen sm {
+    .hide-mobile {
+      display: block;
+    }
   }
   
   .show-mobile {
-    @apply block sm:hidden;
+    display: block;
+  }
+  
+  @screen sm {
+    .show-mobile {
+      display: none;
+    }
   }
   
   .responsive-padding {
-    @apply p-2 sm:p-3 lg:p-4;
+    padding: 0.5rem;
+  }
+  
+  @screen sm {
+    .responsive-padding {
+      padding: 0.75rem;
+    }
+  }
+  
+  @screen lg {
+    .responsive-padding {
+      padding: 1rem;
+    }
   }
   
   .mobile-safe {
