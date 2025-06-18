@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -48,6 +48,23 @@ const TimeTracker = ({ tasks, onTimeUpdate }: TimeTrackerProps) => {
   const [manualHours, setManualHours] = useState("");
   const [timeDescription, setTimeDescription] = useState("");
   const [workDate, setWorkDate] = useState(new Date().toISOString().split('T')[0]);
+  const [elapsedTimes, setElapsedTimes] = useState<Record<string, number>>({});
+
+  // Update elapsed times for active timers
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const now = Date.now();
+      const newElapsedTimes: Record<string, number> = {};
+      
+      Object.entries(activeTimers).forEach(([taskId, startTime]) => {
+        newElapsedTimes[taskId] = now - startTime.getTime();
+      });
+      
+      setElapsedTimes(newElapsedTimes);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [activeTimers]);
 
   const startTimer = (taskId: string) => {
     setActiveTimers(prev => ({
@@ -93,6 +110,13 @@ const TimeTracker = ({ tasks, onTimeUpdate }: TimeTrackerProps) => {
         const newTimers = { ...prev };
         delete newTimers[taskId];
         return newTimers;
+      });
+
+      // Limpiar el tiempo transcurrido
+      setElapsedTimes(prev => {
+        const newTimes = { ...prev };
+        delete newTimes[taskId];
+        return newTimes;
       });
 
       onTimeUpdate();
@@ -167,17 +191,7 @@ const TimeTracker = ({ tasks, onTimeUpdate }: TimeTrackerProps) => {
     }
   };
 
-  const formatTimerDisplay = (startTime: Date) => {
-    const [elapsed, setElapsed] = useState(0);
-
-    useState(() => {
-      const interval = setInterval(() => {
-        setElapsed(Date.now() - startTime.getTime());
-      }, 1000);
-
-      return () => clearInterval(interval);
-    });
-
+  const formatElapsedTime = (elapsed: number) => {
     const hours = Math.floor(elapsed / (1000 * 60 * 60));
     const minutes = Math.floor((elapsed % (1000 * 60 * 60)) / (1000 * 60));
     const seconds = Math.floor((elapsed % (1000 * 60)) / 1000);
@@ -297,7 +311,7 @@ const TimeTracker = ({ tasks, onTimeUpdate }: TimeTrackerProps) => {
               </div>
               {activeTimers[task.id] && (
                 <div className="text-sm text-muted-foreground">
-                  Tiempo activo: {formatTimerDisplay(activeTimers[task.id])}
+                  Tiempo activo: {formatElapsedTime(elapsedTimes[task.id] || 0)}
                 </div>
               )}
             </CardHeader>
