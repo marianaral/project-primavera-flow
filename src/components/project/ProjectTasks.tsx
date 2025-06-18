@@ -28,6 +28,7 @@ import TaskViewControls from "./TaskViewControls";
 import TaskColumnView from "./TaskColumnView";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import TimeTracker from "./TimeTracker";
 
 interface Task {
   id: string;
@@ -386,6 +387,15 @@ const ProjectTasks = ({ project }: ProjectTasksProps) => {
           );
         })}
       </div>
+
+      <TimeTracker 
+        tasks={tasks.map(task => ({
+          id: task.id,
+          title: task.title,
+          actual_hours: task.actualHours
+        }))}
+        onTimeUpdate={fetchTasks}
+      />
 
       {viewType === "list" ? (
         <Card className="w-full">

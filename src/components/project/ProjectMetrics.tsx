@@ -48,41 +48,40 @@ const ProjectMetrics = ({ project }: ProjectMetricsProps) => {
   const pendingTasks = tasks.filter(task => task.status === 'pending').length;
   
   const totalExpenses = expenses.reduce((sum, expense) => sum + Number(expense.amount), 0);
-  const averageTaskTime = tasks.length > 0 ? (tasks.reduce((sum, task) => sum + (Number(task.estimated_hours) || 0), 0) / tasks.length) : 0;
+  const totalEstimatedHours = tasks.reduce((sum, task) => sum + (Number(task.estimated_hours) || 0), 0);
+  const totalActualHours = tasks.reduce((sum, task) => sum + (Number(task.actual_hours) || 0), 0);
+  const averageTaskTime = tasks.length > 0 ? (totalEstimatedHours / tasks.length) : 0;
   
   const approvedRequirements = requirements.filter(req => req.status === 'approved').length;
   const efficiency = requirements.length > 0 ? (approvedRequirements / requirements.length) * 100 : 0;
   
-  // Datos simulados para gráficos (se podrían calcular con fechas reales)
+  // Progreso real basado en tareas completadas
+  const realProgress = tasks.length > 0 ? Math.round((completedTasks / tasks.length) * 100) : 0;
+  
+  // Datos para gráficos basados en datos reales
   const progressData = [
-    { month: "Ene", planned: 20, actual: 15 },
-    { month: "Feb", planned: 35, actual: 30 },
-    { month: "Mar", planned: 50, actual: 45 },
-    { month: "Abr", planned: 65, actual: 60 },
-    { month: "May", planned: 80, actual: 75 },
-    { month: "Jun", planned: 100, actual: project.progress },
+    { month: "Inicio", planned: 0, actual: 0 },
+    { month: "25%", planned: 25, actual: Math.min(realProgress, 25) },
+    { month: "50%", planned: 50, actual: Math.min(realProgress, 50) },
+    { month: "75%", planned: 75, actual: Math.min(realProgress, 75) },
+    { month: "100%", planned: 100, actual: realProgress },
   ];
 
   const budgetData = [
-    { month: "Ene", budget: project.budget * 0.16, spent: totalExpenses * 0.2 },
-    { month: "Feb", budget: project.budget * 0.32, spent: totalExpenses * 0.4 },
-    { month: "Mar", budget: project.budget * 0.48, spent: totalExpenses * 0.6 },
-    { month: "Abr", budget: project.budget * 0.64, spent: totalExpenses * 0.75 },
-    { month: "May", budget: project.budget * 0.8, spent: totalExpenses * 0.9 },
-    { month: "Jun", budget: project.budget, spent: totalExpenses },
+    { category: "Presupuestado", amount: project.budget },
+    { category: "Gastado", amount: totalExpenses },
+    { category: "Disponible", amount: project.budget - totalExpenses },
   ];
 
   const taskDistribution = [
     { name: "Completadas", value: completedTasks, color: "#10b981" },
     { name: "En Progreso", value: inProgressTasks, color: "#3b82f6" },
     { name: "Pendientes", value: pendingTasks, color: "#f59e0b" },
-  ];
+  ].filter(item => item.value > 0); // Solo mostrar categorías con datos
 
-  const timeMetrics = [
-    { category: "Análisis", estimated: 40, actual: 38 },
-    { category: "Diseño", estimated: 60, actual: 65 },
-    { category: "Desarrollo", estimated: 120, actual: 110 },
-    { category: "Testing", estimated: 30, actual: 28 },
+  const hoursComparison = [
+    { category: "Estimadas", hours: totalEstimatedHours },
+    { category: "Trabajadas", hours: totalActualHours },
   ];
 
   if (loading) {
@@ -100,22 +99,22 @@ const ProjectMetrics = ({ project }: ProjectMetricsProps) => {
       <div>
         <h3 className="text-lg font-semibold">Métricas y Análisis</h3>
         <p className="text-muted-foreground">
-          Indicadores de rendimiento y análisis del proyecto
+          Indicadores de rendimiento y análisis del proyecto (datos reales)
         </p>
       </div>
 
-      {/* KPIs principales */}
+      {/* KPIs principales actualizados con datos reales */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center gap-2">
               <Target className="h-4 w-4" />
-              Eficiencia
+              Progreso Real
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{efficiency.toFixed(0)}%</div>
-            <p className="text-xs text-muted-foreground">Requisitos aprobados</p>
+            <div className="text-2xl font-bold">{realProgress}%</div>
+            <p className="text-xs text-muted-foreground">Basado en tareas completadas</p>
           </CardContent>
         </Card>
 
@@ -123,12 +122,14 @@ const ProjectMetrics = ({ project }: ProjectMetricsProps) => {
           <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center gap-2">
               <Clock className="h-4 w-4" />
-              Tiempo Promedio
+              Horas Trabajadas
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{averageTaskTime.toFixed(1)}h</div>
-            <p className="text-xs text-muted-foreground">Por tarea estimada</p>
+            <div className="text-2xl font-bold">{totalActualHours.toFixed(1)}h</div>
+            <p className="text-xs text-muted-foreground">
+              de {totalEstimatedHours.toFixed(1)}h estimadas
+            </p>
           </CardContent>
         </Card>
 
@@ -136,12 +137,12 @@ const ProjectMetrics = ({ project }: ProjectMetricsProps) => {
           <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center gap-2">
               <Users className="h-4 w-4" />
-              Tareas
+              Tareas Totales
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{tasks.length}</div>
-            <p className="text-xs text-muted-foreground">Total registradas</p>
+            <p className="text-xs text-muted-foreground">Registradas en el proyecto</p>
           </CardContent>
         </Card>
 
@@ -149,24 +150,26 @@ const ProjectMetrics = ({ project }: ProjectMetricsProps) => {
           <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center gap-2">
               <CheckCircle className="h-4 w-4" />
-              Completadas
+              Eficiencia
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{completedTasks}</div>
-            <p className="text-xs text-muted-foreground">
-              {tasks.length > 0 ? ((completedTasks / tasks.length) * 100).toFixed(0) : 0}% del total
-            </p>
+            <div className="text-2xl font-bold">
+              {totalEstimatedHours > 0 && totalActualHours > 0
+                ? Math.round((totalEstimatedHours / totalActualHours) * 100)
+                : 0}%
+            </div>
+            <p className="text-xs text-muted-foreground">Estimado vs Real</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Gráficos principales */}
+      {/* Gráficos actualizados */}
       <div className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Progreso vs Planificado</CardTitle>
-            <CardDescription>Comparación del avance real con el planificado</CardDescription>
+            <CardTitle>Progreso del Proyecto</CardTitle>
+            <CardDescription>Avance basado en tareas completadas</CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -175,7 +178,7 @@ const ProjectMetrics = ({ project }: ProjectMetricsProps) => {
                 <XAxis dataKey="month" />
                 <YAxis />
                 <Tooltip />
-                <Line type="monotone" dataKey="planned" stroke="#6366f1" strokeDasharray="5 5" name="Planificado" />
+                <Line type="monotone" dataKey="planned" stroke="#6366f1" strokeDasharray="5 5" name="Meta" />
                 <Line type="monotone" dataKey="actual" stroke="#10b981" name="Real" />
               </LineChart>
             </ResponsiveContainer>
@@ -184,95 +187,93 @@ const ProjectMetrics = ({ project }: ProjectMetricsProps) => {
 
         <Card>
           <CardHeader>
-            <CardTitle>Presupuesto vs Gastos</CardTitle>
-            <CardDescription>Control financiero a lo largo del tiempo</CardDescription>
+            <CardTitle>Distribución del Presupuesto</CardTitle>
+            <CardDescription>Estado actual del presupuesto</CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={budgetData}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
+                <XAxis dataKey="category" />
                 <YAxis />
-                <Tooltip formatter={(value) => `$${value.toLocaleString()}`} />
-                <Bar dataKey="budget" fill="#6366f1" name="Presupuesto" />
-                <Bar dataKey="spent" fill="#10b981" name="Gastado" />
+                <Tooltip formatter={(value) => `$${Number(value).toLocaleString()}`} />
+                <Bar dataKey="amount" fill="#6366f1" />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Distribución de Tareas</CardTitle>
-            <CardDescription>Estado actual de todas las tareas</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={taskDistribution}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {taskDistribution.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+        {taskDistribution.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Estado de las Tareas</CardTitle>
+              <CardDescription>Distribución actual de tareas</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={taskDistribution}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    {taskDistribution.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        )}
 
         <Card>
           <CardHeader>
-            <CardTitle>Tiempos: Estimado vs Real</CardTitle>
-            <CardDescription>Precisión en estimaciones por categoría</CardDescription>
+            <CardTitle>Comparación de Horas</CardTitle>
+            <CardDescription>Horas estimadas vs trabajadas</CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={timeMetrics}>
+              <BarChart data={hoursComparison}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="category" />
                 <YAxis />
-                <Tooltip formatter={(value) => `${value}h`} />
-                <Bar dataKey="estimated" fill="#f59e0b" name="Estimado" />
-                <Bar dataKey="actual" fill="#10b981" name="Real" />
+                <Tooltip formatter={(value) => `${Number(value).toFixed(1)}h`} />
+                <Bar dataKey="hours" fill="#10b981" />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
       </div>
 
-      {/* Tabla de métricas detalladas */}
+      {/* Métricas detalladas actualizadas */}
       <Card>
         <CardHeader>
           <CardTitle>Métricas Detalladas</CardTitle>
-          <CardDescription>Indicadores clave de rendimiento del proyecto</CardDescription>
+          <CardDescription>Indicadores calculados con datos reales del proyecto</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-3">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Días transcurridos:</span>
-                <span className="font-semibold">
-                  {Math.ceil((new Date().getTime() - new Date(project.startDate).getTime()) / (1000 * 3600 * 24))}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Días restantes:</span>
-                <span className="font-semibold">
-                  {Math.ceil((new Date(project.endDate).getTime() - new Date().getTime()) / (1000 * 3600 * 24))}
-                </span>
+                <span className="text-muted-foreground">Progreso real:</span>
+                <span className="font-semibold">{realProgress}%</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Total gastos:</span>
                 <span className="font-semibold">${totalExpenses.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Presupuesto utilizado:</span>
+                <span className="font-semibold">
+                  {project.budget > 0 ? Math.round((totalExpenses / project.budget) * 100) : 0}%
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Presupuesto restante:</span>
@@ -293,8 +294,8 @@ const ProjectMetrics = ({ project }: ProjectMetricsProps) => {
                 <span className="font-semibold text-orange-400">{pendingTasks}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Requisitos aprobados:</span>
-                <span className="font-semibold text-green-400">{approvedRequirements}</span>
+                <span className="text-muted-foreground">Horas trabajadas:</span>
+                <span className="font-semibold">{totalActualHours.toFixed(1)}h</span>
               </div>
             </div>
           </div>
