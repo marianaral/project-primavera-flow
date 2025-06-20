@@ -4,9 +4,30 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Settings as SettingsIcon, User, Bell, Shield } from "lucide-react";
+import { Settings as SettingsIcon, User, Bell, Shield, Globe, Clock } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useSettings } from "@/hooks/useSettings";
 
 const Settings = () => {
+  const { settings, updateSettings, formatTime, formatCurrency } = useSettings();
+
+  const currencies = [
+    { value: 'EUR', label: 'Euro (€)' },
+    { value: 'USD', label: 'Dólar estadounidense ($)' },
+    { value: 'GBP', label: 'Libra esterlina (£)' },
+    { value: 'JPY', label: 'Yen japonés (¥)' },
+    { value: 'CAD', label: 'Dólar canadiense (CAD)' },
+    { value: 'AUD', label: 'Dólar australiano (AUD)' },
+    { value: 'CHF', label: 'Franco suizo (CHF)' },
+    { value: 'MXN', label: 'Peso mexicano (MXN)' },
+  ];
+
   return (
     <div className="animate-fade-in space-y-6">
       <div className="flex items-center gap-2 mb-6">
@@ -38,6 +59,69 @@ const Settings = () => {
               </div>
             </div>
             <Button>Guardar cambios</Button>
+          </CardContent>
+        </Card>
+
+        {/* Configuración Regional */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Globe className="h-5 w-5" />
+              Configuración Regional
+            </CardTitle>
+            <CardDescription>
+              Configura la divisa y formatos de visualización
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="currency">Divisa</Label>
+              <Select value={settings.currency} onValueChange={(value) => updateSettings({ currency: value })}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleccionar divisa" />
+                </SelectTrigger>
+                <SelectContent>
+                  {currencies.map((currency) => (
+                    <SelectItem key={currency.value} value={currency.value}>
+                      {currency.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <div className="text-sm text-muted-foreground">
+                Ejemplo: {formatCurrency(1234.56)}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Configuración de Tiempo */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Clock className="h-5 w-5" />
+              Formato de Tiempo
+            </CardTitle>
+            <CardDescription>
+              Configura cómo se muestran las horas trabajadas
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="timeFormat">Formato de visualización</Label>
+              <Select value={settings.timeFormat} onValueChange={(value: 'decimal' | 'hms') => updateSettings({ timeFormat: value })}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleccionar formato" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="decimal">Decimal (ej: 2.50h)</SelectItem>
+                  <SelectItem value="hms">Horas:Minutos:Segundos (ej: 02:30:00)</SelectItem>
+                </SelectContent>
+              </Select>
+              <div className="text-sm text-muted-foreground">
+                Ejemplo: {formatTime(2.5)}
+              </div>
+            </div>
           </CardContent>
         </Card>
 

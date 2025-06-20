@@ -29,6 +29,7 @@ import TaskColumnView from "./TaskColumnView";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import TimeTracker from "./TimeTracker";
+import { useSettings } from "@/hooks/useSettings";
 
 interface Task {
   id: string;
@@ -52,6 +53,7 @@ type TaskViewType = "list" | "status-columns" | "priority-columns";
 
 const ProjectTasks = ({ project }: ProjectTasksProps) => {
   const { toast } = useToast();
+  const { formatTime } = useSettings();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -444,8 +446,8 @@ const ProjectTasks = ({ project }: ProjectTasksProps) => {
                       <TableCell className="text-sm">
                         {task.dueDate ? new Date(task.dueDate).toLocaleDateString('es-ES') : "-"}
                       </TableCell>
-                      <TableCell className="text-sm">{task.estimatedHours}h</TableCell>
-                      <TableCell className="text-sm">{task.actualHours}h</TableCell>
+                      <TableCell className="text-sm">{formatTime(task.estimatedHours)}</TableCell>
+                      <TableCell className="text-sm">{formatTime(task.actualHours)}</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1">
                           <Button

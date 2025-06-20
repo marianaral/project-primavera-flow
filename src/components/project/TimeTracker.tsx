@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,6 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useSettings } from "@/hooks/useSettings";
 
 interface Task {
   id: string;
@@ -42,6 +42,7 @@ interface TimeTrackerProps {
 
 const TimeTracker = ({ tasks, onTimeUpdate }: TimeTrackerProps) => {
   const { toast } = useToast();
+  const { formatTime } = useSettings();
   const [activeTimers, setActiveTimers] = useState<Record<string, Date>>({});
   const [manualTimeDialog, setManualTimeDialog] = useState(false);
   const [selectedTaskId, setSelectedTaskId] = useState<string>("");
@@ -192,11 +193,8 @@ const TimeTracker = ({ tasks, onTimeUpdate }: TimeTrackerProps) => {
   };
 
   const formatElapsedTime = (elapsed: number) => {
-    const hours = Math.floor(elapsed / (1000 * 60 * 60));
-    const minutes = Math.floor((elapsed % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((elapsed % (1000 * 60)) / 1000);
-
-    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    const hours = elapsed / (1000 * 60 * 60);
+    return formatTime(hours);
   };
 
   return (
@@ -286,7 +284,7 @@ const TimeTracker = ({ tasks, onTimeUpdate }: TimeTrackerProps) => {
                 <div className="flex items-center gap-2">
                   <Badge variant="outline" className="flex items-center gap-1">
                     <Clock className="h-3 w-3" />
-                    {task.actual_hours?.toFixed(1) || 0}h
+                    {formatTime(task.actual_hours || 0)}
                   </Badge>
                   {activeTimers[task.id] ? (
                     <Button
