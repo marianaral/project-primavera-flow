@@ -10,9 +10,11 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { transformDatabaseProject } from "@/types/database";
 import type { DatabaseProject } from "@/types/database";
+import { useSettings } from "@/hooks/useSettings";
 
 const Dashboard = () => {
   const { toast } = useToast();
+  const { formatCurrency } = useSettings();
   const [isProjectFormOpen, setIsProjectFormOpen] = useState(false);
   const [projectList, setProjectList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -210,7 +212,7 @@ const Dashboard = () => {
           <CardContent>
             <div className="text-2xl font-bold text-foreground">{metrics.budgetUtilization.toFixed(1)}%</div>
             <p className="text-xs text-muted-foreground">
-              ${metrics.totalSpent.toLocaleString()} / ${metrics.totalBudget.toLocaleString()}
+              {formatCurrency(metrics.totalSpent)} / {formatCurrency(metrics.totalBudget)}
             </p>
           </CardContent>
         </Card>

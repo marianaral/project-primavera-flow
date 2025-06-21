@@ -7,6 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { Calendar, DollarSign, Clock, Target, CheckCircle, AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useSettings } from "@/hooks/useSettings";
 
 interface ProjectOverviewProps {
   project: Project;
@@ -26,6 +27,7 @@ interface ProjectMetrics {
 
 const ProjectOverview = ({ project }: ProjectOverviewProps) => {
   const { toast } = useToast();
+  const { formatCurrency } = useSettings();
   const [metrics, setMetrics] = useState<ProjectMetrics>({
     totalTasks: 0,
     completedTasks: 0,
@@ -224,11 +226,11 @@ const ProjectOverview = ({ project }: ProjectOverviewProps) => {
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <span>Presupuesto total:</span>
-              <span className="font-semibold">${project.budget.toLocaleString()}</span>
+              <span className="font-semibold">{formatCurrency(project.budget)}</span>
             </div>
             <div className="flex items-center justify-between">
               <span>Gastado:</span>
-              <span className="font-semibold">${metrics.totalExpenses.toLocaleString()}</span>
+              <span className="font-semibold">{formatCurrency(metrics.totalExpenses)}</span>
             </div>
             <div>
               <div className="flex items-center justify-between mb-2">
@@ -240,7 +242,7 @@ const ProjectOverview = ({ project }: ProjectOverviewProps) => {
             <div className="flex items-center justify-between">
               <span>Restante:</span>
               <span className="font-semibold text-green-400">
-                ${(project.budget - metrics.totalExpenses).toLocaleString()}
+                {formatCurrency(project.budget - metrics.totalExpenses)}
               </span>
             </div>
           </CardContent>

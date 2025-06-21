@@ -26,6 +26,7 @@ import {
 import ExpenseForm from "./ExpenseForm";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useSettings } from "@/hooks/useSettings";
 
 interface Expense {
   id: string;
@@ -43,6 +44,7 @@ interface ProjectExpensesProps {
 
 const ProjectExpenses = ({ project }: ProjectExpensesProps) => {
   const { toast } = useToast();
+  const { formatCurrency } = useSettings();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -322,7 +324,7 @@ const ProjectExpenses = ({ project }: ProjectExpensesProps) => {
         <div>
           <h3 className="text-lg font-semibold">Gastos del Proyecto</h3>
           <p className="text-muted-foreground">
-            Total gastado: ${totalExpenses.toLocaleString()} • {pendingExpenses} pendientes • {rejectedExpenses} rechazados
+            Total gastado: {formatCurrency(totalExpenses)} • {pendingExpenses} pendientes • {rejectedExpenses} rechazados
           </p>
         </div>
         <Button onClick={() => setIsFormOpen(true)}>
@@ -340,7 +342,7 @@ const ProjectExpenses = ({ project }: ProjectExpensesProps) => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${totalExpenses.toLocaleString()}</div>
+            <div className="text-2xl font-bold">{formatCurrency(totalExpenses)}</div>
             <p className="text-xs text-muted-foreground">
               {expenses.length} gastos registrados
             </p>
@@ -355,7 +357,7 @@ const ProjectExpenses = ({ project }: ProjectExpensesProps) => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${approvedExpenses.toLocaleString()}</div>
+            <div className="text-2xl font-bold">{formatCurrency(approvedExpenses)}</div>
             <p className="text-xs text-muted-foreground">
               {expenses.filter(exp => exp.status === "approved").length} aprobados
             </p>
@@ -423,7 +425,7 @@ const ProjectExpenses = ({ project }: ProjectExpensesProps) => {
                   </TableCell>
                   <TableCell>{getCategoryBadge(expense.category)}</TableCell>
                   <TableCell className="font-medium">
-                    ${expense.amount.toLocaleString()}
+                    {formatCurrency(expense.amount)}
                   </TableCell>
                   <TableCell>
                     {new Date(expense.date).toLocaleDateString('es-ES')}
