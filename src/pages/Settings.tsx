@@ -13,9 +13,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useSettings } from "@/hooks/useSettings";
+import { useToast } from "@/hooks/use-toast";
 
 const Settings = () => {
   const { settings, updateSettings, formatTime, formatCurrency } = useSettings();
+  const { toast } = useToast();
 
   const currencies = [
     { value: 'EUR', label: 'Euro (€)' },
@@ -27,6 +29,22 @@ const Settings = () => {
     { value: 'CHF', label: 'Franco suizo (CHF)' },
     { value: 'MXN', label: 'Peso mexicano (MXN)' },
   ];
+
+  const handleCurrencyChange = (newCurrency: string) => {
+    updateSettings({ currency: newCurrency });
+    toast({
+      title: "Divisa actualizada",
+      description: `La divisa se ha cambiado a ${currencies.find(c => c.value === newCurrency)?.label}`,
+    });
+  };
+
+  const handleTimeFormatChange = (newFormat: 'decimal' | 'hms') => {
+    updateSettings({ timeFormat: newFormat });
+    toast({
+      title: "Formato de tiempo actualizado",
+      description: `El formato se ha cambiado a ${newFormat === 'decimal' ? 'decimal' : 'hh:mm:ss'}`,
+    });
+  };
 
   return (
     <div className="animate-fade-in space-y-6">
@@ -76,7 +94,7 @@ const Settings = () => {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="currency">Divisa</Label>
-              <Select value={settings.currency} onValueChange={(value) => updateSettings({ currency: value })}>
+              <Select value={settings.currency} onValueChange={handleCurrencyChange}>
                 <SelectTrigger>
                   <SelectValue placeholder="Seleccionar divisa" />
                 </SelectTrigger>
@@ -109,7 +127,7 @@ const Settings = () => {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="timeFormat">Formato de visualización</Label>
-              <Select value={settings.timeFormat} onValueChange={(value: 'decimal' | 'hms') => updateSettings({ timeFormat: value })}>
+              <Select value={settings.timeFormat} onValueChange={handleTimeFormatChange}>
                 <SelectTrigger>
                   <SelectValue placeholder="Seleccionar formato" />
                 </SelectTrigger>

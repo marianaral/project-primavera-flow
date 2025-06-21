@@ -50,16 +50,23 @@ const TimeTracker = ({ tasks, onTimeUpdate }: TimeTrackerProps) => {
   const [manualTime, setManualTime] = useState("00:00:00");
   const [timeDescription, setTimeDescription] = useState("");
   const [workDate, setWorkDate] = useState(new Date().toISOString().split('T')[0]);
-  const [elapsedTimes, setElapsedTimes] = useState<Record<string, number>>({});
+  const [elapsedTimes, setElapsedTimes] = useState<Record<string, string>>({});
 
-  // Update elapsed times for active timers
+  // Update elapsed times for active timers - fixed to show real-time hh:mm:ss
   useEffect(() => {
     const interval = setInterval(() => {
-      const now = Date.now();
-      const newElapsedTimes: Record<string, number> = {};
+      const now = new Date();
+      const newElapsedTimes: Record<string, string> = {};
       
       Object.entries(activeTimers).forEach(([taskId, startTime]) => {
-        newElapsedTimes[taskId] = now - startTime.getTime();
+        const elapsedMs = now.getTime() - startTime.getTime();
+        const elapsedSeconds = Math.floor(elapsedMs / 1000);
+        
+        const hours = Math.floor(elapsedSeconds / 3600);
+        const minutes = Math.floor((elapsedSeconds % 3600) / 60);
+        const seconds = elapsedSeconds % 60;
+        
+        newElapsedTimes[taskId] = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
       });
       
       setElapsedTimes(newElapsedTimes);
@@ -193,11 +200,6 @@ const TimeTracker = ({ tasks, onTimeUpdate }: TimeTrackerProps) => {
     }
   };
 
-  const formatElapsedTime = (elapsed: number) => {
-    const hours = elapsed / (1000 * 60 * 60);
-    return formatHoursToHMS(hours);
-  };
-
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
@@ -309,7 +311,7 @@ const TimeTracker = ({ tasks, onTimeUpdate }: TimeTrackerProps) => {
               </div>
               {activeTimers[task.id] && (
                 <div className="text-sm text-muted-foreground">
-                  Tiempo activo: {formatElapsedTime(elapsedTimes[task.id] || 0)}
+                  Tiempo activo: {elapsedTimes[task.id] || "00:00:00"}
                 </div>
               )}
             </CardHeader>
