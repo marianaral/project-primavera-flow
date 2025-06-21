@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -39,9 +38,10 @@ interface TimeEntry {
 interface TimeTrackerProps {
   tasks: Task[];
   onTimeUpdate: () => void;
+  onTimerUpdate?: (timers: Record<string, Date>) => void;
 }
 
-const TimeTracker = ({ tasks, onTimeUpdate }: TimeTrackerProps) => {
+const TimeTracker = ({ tasks, onTimeUpdate, onTimerUpdate }: TimeTrackerProps) => {
   const { toast } = useToast();
   const { formatHoursToHMS, parseHMSToHours } = useSettings();
   const [activeTimers, setActiveTimers] = useState<Record<string, Date>>({});
@@ -75,11 +75,19 @@ const TimeTracker = ({ tasks, onTimeUpdate }: TimeTrackerProps) => {
     return () => clearInterval(interval);
   }, [activeTimers]);
 
+  // Notify parent component when timers change
+  useEffect(() => {
+    if (onTimerUpdate) {
+      onTimerUpdate(activeTimers);
+    }
+  }, [activeTimers, onTimerUpdate]);
+
   const startTimer = (taskId: string) => {
-    setActiveTimers(prev => ({
-      ...prev,
+    const newTimers = {
+      ...activeTimers,
       [taskId]: new Date()
-    }));
+    };
+    setActiveTimers(newTimers);
     
     toast({
       title: "Timer iniciado",
