@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -38,10 +39,9 @@ interface TimeEntry {
 interface TimeTrackerProps {
   tasks: Task[];
   onTimeUpdate: () => void;
-  onTimerUpdate?: (timers: Record<string, { startTime: Date; elapsedTime: string }>) => void;
 }
 
-const TimeTracker = ({ tasks, onTimeUpdate, onTimerUpdate }: TimeTrackerProps) => {
+const TimeTracker = ({ tasks, onTimeUpdate }: TimeTrackerProps) => {
   const { toast } = useToast();
   const { formatHoursToHMS, parseHMSToHours } = useSettings();
   const [activeTimers, setActiveTimers] = useState<Record<string, Date>>({});
@@ -57,7 +57,6 @@ const TimeTracker = ({ tasks, onTimeUpdate, onTimerUpdate }: TimeTrackerProps) =
     const interval = setInterval(() => {
       const now = new Date();
       const newElapsedTimes: Record<string, string> = {};
-      const timerData: Record<string, { startTime: Date; elapsedTime: string }> = {};
       
       Object.entries(activeTimers).forEach(([taskId, startTime]) => {
         const elapsedMs = now.getTime() - startTime.getTime();
@@ -67,31 +66,20 @@ const TimeTracker = ({ tasks, onTimeUpdate, onTimerUpdate }: TimeTrackerProps) =
         const minutes = Math.floor((elapsedSeconds % 3600) / 60);
         const seconds = elapsedSeconds % 60;
         
-        const elapsedTimeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-        newElapsedTimes[taskId] = elapsedTimeString;
-        timerData[taskId] = {
-          startTime,
-          elapsedTime: elapsedTimeString
-        };
+        newElapsedTimes[taskId] = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
       });
       
       setElapsedTimes(newElapsedTimes);
-      
-      // Notify parent component when timers change
-      if (onTimerUpdate) {
-        onTimerUpdate(timerData);
-      }
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [activeTimers, onTimerUpdate]);
+  }, [activeTimers]);
 
   const startTimer = (taskId: string) => {
-    const newTimers = {
-      ...activeTimers,
+    setActiveTimers(prev => ({
+      ...prev,
       [taskId]: new Date()
-    };
-    setActiveTimers(newTimers);
+    }));
     
     toast({
       title: "Timer iniciado",

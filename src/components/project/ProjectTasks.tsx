@@ -53,7 +53,7 @@ type TaskViewType = "list" | "status-columns" | "priority-columns";
 
 const ProjectTasks = ({ project }: ProjectTasksProps) => {
   const { toast } = useToast();
-  const { formatHoursToHMS, parseHMSToHours } = useSettings();
+  const { formatHoursToHMS } = useSettings();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -63,30 +63,6 @@ const ProjectTasks = ({ project }: ProjectTasksProps) => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewType, setViewType] = useState<TaskViewType>("list");
-  const [activeTimers, setActiveTimers] = useState<Record<string, { startTime: Date; elapsedTime: string }>>({});
-
-  // Update elapsed times for active timers - real-time hh:mm:ss
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const now = new Date();
-      const newElapsedTimes: Record<string, string> = {};
-      
-      Object.entries(activeTimers).forEach(([taskId, startTime]) => {
-        const elapsedMs = now.getTime() - startTime.getTime();
-        const elapsedSeconds = Math.floor(elapsedMs / 1000);
-        
-        const hours = Math.floor(elapsedSeconds / 3600);
-        const minutes = Math.floor((elapsedSeconds % 3600) / 60);
-        const seconds = elapsedSeconds % 60;
-        
-        newElapsedTimes[taskId] = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-      });
-      
-      setElapsedTimes(newElapsedTimes);
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [activeTimers]);
 
   useEffect(() => {
     fetchTasks();
@@ -134,10 +110,6 @@ const ProjectTasks = ({ project }: ProjectTasksProps) => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleTimerUpdate = (timers: Record<string, { startTime: Date; elapsedTime: string }>) => {
-    setActiveTimers(timers);
   };
 
   const handleCreateTask = async (taskData: any) => {
@@ -359,16 +331,6 @@ const ProjectTasks = ({ project }: ProjectTasksProps) => {
     );
   };
 
-  const getDisplayTime = (taskId: string, actualHours: number) => {
-    if (activeTimers[taskId]) {
-      // Parse the elapsed time string to hours and add to actual hours
-      const elapsedHours = parseHMSToHours(activeTimers[taskId].elapsedTime);
-      const totalHours = actualHours + elapsedHours;
-      return formatHoursToHMS(totalHours);
-    }
-    return formatHoursToHMS(actualHours);
-  };
-
   const completedTasks = tasks.filter(task => task.status === "completed").length;
   const completionPercentage = tasks.length > 0 ? (completedTasks / tasks.length) * 100 : 0;
 
@@ -435,7 +397,6 @@ const ProjectTasks = ({ project }: ProjectTasksProps) => {
           actual_hours: task.actualHours
         }))}
         onTimeUpdate={fetchTasks}
-        onTimerUpdate={handleTimerUpdate}
       />
 
       {viewType === "list" ? (
@@ -478,11 +439,6 @@ const ProjectTasks = ({ project }: ProjectTasksProps) => {
                           <div className="text-sm text-muted-foreground hidden sm:block truncate max-w-[200px]">
                             {task.description}
                           </div>
-                          {activeTimers[task.id] && (
-                            <div className="text-xs text-blue-600 font-mono">
-                              ⏱️ {activeTimers[task.id].elapsedTime}
-                            </div>
-                          )}
                         </div>
                       </TableCell>
                       <TableCell className="text-sm">{task.assignee}</TableCell>
@@ -491,9 +447,7 @@ const ProjectTasks = ({ project }: ProjectTasksProps) => {
                         {task.dueDate ? new Date(task.dueDate).toLocaleDateString('es-ES') : "-"}
                       </TableCell>
                       <TableCell className="text-sm">{formatHoursToHMS(task.estimatedHours)}</TableCell>
-                      <TableCell className="text-sm font-mono">
-                        {getDisplayTime(task.id, task.actualHours)}
-                      </TableCell>
+                      <TableCell className="text-sm">{formatHoursToHMS(task.actualHours)}</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1">
                           <Button
