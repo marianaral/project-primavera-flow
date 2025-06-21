@@ -19,6 +19,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
+import { useSettings } from "@/hooks/useSettings";
 
 interface TaskFormData {
   title: string;
@@ -42,6 +43,7 @@ interface TaskFormProps {
 
 const TaskForm = ({ isOpen, onClose, onSubmit, initialData, title }: TaskFormProps) => {
   const { toast } = useToast();
+  const { formatHoursToHMS, parseHMSToHours } = useSettings();
   const [formData, setFormData] = useState<TaskFormData>({
     title: "",
     description: "",
@@ -53,6 +55,8 @@ const TaskForm = ({ isOpen, onClose, onSubmit, initialData, title }: TaskFormPro
     actualHours: 0,
     tags: "",
   });
+  const [estimatedTimeHMS, setEstimatedTimeHMS] = useState("00:00:00");
+  const [actualTimeHMS, setActualTimeHMS] = useState("00:00:00");
 
   useEffect(() => {
     if (initialData && isOpen) {
@@ -67,6 +71,8 @@ const TaskForm = ({ isOpen, onClose, onSubmit, initialData, title }: TaskFormPro
         actualHours: initialData.actualHours || 0,
         tags: initialData.tags || "",
       });
+      setEstimatedTimeHMS(formatHoursToHMS(initialData.estimatedHours || 0));
+      setActualTimeHMS(formatHoursToHMS(initialData.actualHours || 0));
     } else if (!initialData && isOpen) {
       setFormData({
         title: "",
@@ -79,8 +85,22 @@ const TaskForm = ({ isOpen, onClose, onSubmit, initialData, title }: TaskFormPro
         actualHours: 0,
         tags: "",
       });
+      setEstimatedTimeHMS("00:00:00");
+      setActualTimeHMS("00:00:00");
     }
-  }, [initialData, isOpen]);
+  }, [initialData, isOpen, formatHoursToHMS]);
+
+  const handleEstimatedTimeChange = (value: string) => {
+    setEstimatedTimeHMS(value);
+    const hours = parseHMSToHours(value);
+    setFormData({ ...formData, estimatedHours: hours });
+  };
+
+  const handleActualTimeChange = (value: string) => {
+    setActualTimeHMS(value);
+    const hours = parseHMSToHours(value);
+    setFormData({ ...formData, actualHours: hours });
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -187,24 +207,26 @@ const TaskForm = ({ isOpen, onClose, onSubmit, initialData, title }: TaskFormPro
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-              <Label htmlFor="estimatedHours" className="text-foreground">Horas estimadas</Label>
+              <Label htmlFor="estimatedTime" className="text-foreground">Tiempo estimado (hh:mm:ss)</Label>
               <Input
-                id="estimatedHours"
-                type="number"
-                value={formData.estimatedHours}
-                onChange={(e) => setFormData({ ...formData, estimatedHours: parseInt(e.target.value) || 0 })}
-                min="0"
+                id="estimatedTime"
+                type="text"
+                value={estimatedTimeHMS}
+                onChange={(e) => handleEstimatedTimeChange(e.target.value)}
+                placeholder="00:00:00"
+                pattern="[0-9]{2}:[0-9]{2}:[0-9]{2}"
                 className="bg-input text-foreground border-border"
               />
             </div>
             <div>
-              <Label htmlFor="actualHours" className="text-foreground">Horas reales</Label>
+              <Label htmlFor="actualTime" className="text-foreground">Tiempo real (hh:mm:ss)</Label>
               <Input
-                id="actualHours"
-                type="number"
-                value={formData.actualHours}
-                onChange={(e) => setFormData({ ...formData, actualHours: parseInt(e.target.value) || 0 })}
-                min="0"
+                id="actualTime"
+                type="text"
+                value={actualTimeHMS}
+                onChange={(e) => handleActualTimeChange(e.target.value)}
+                placeholder="00:00:00"
+                pattern="[0-9]{2}:[0-9]{2}:[0-9]{2}"
                 className="bg-input text-foreground border-border"
               />
             </div>

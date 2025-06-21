@@ -53,7 +53,7 @@ type TaskViewType = "list" | "status-columns" | "priority-columns";
 
 const ProjectTasks = ({ project }: ProjectTasksProps) => {
   const { toast } = useToast();
-  const { formatTime } = useSettings();
+  const { formatHoursToHMS } = useSettings();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -417,8 +417,8 @@ const ProjectTasks = ({ project }: ProjectTasksProps) => {
                     <TableHead className="min-w-[100px]">Responsable</TableHead>
                     <TableHead className="min-w-[80px]">Prioridad</TableHead>
                     <TableHead className="min-w-[100px]">Fecha límite</TableHead>
-                    <TableHead className="min-w-[80px]">H. Est.</TableHead>
-                    <TableHead className="min-w-[80px]">H. Real</TableHead>
+                    <TableHead className="min-w-[80px]">T. Est.</TableHead>
+                    <TableHead className="min-w-[80px]">T. Real</TableHead>
                     <TableHead className="min-w-[120px]">Acciones</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -446,8 +446,8 @@ const ProjectTasks = ({ project }: ProjectTasksProps) => {
                       <TableCell className="text-sm">
                         {task.dueDate ? new Date(task.dueDate).toLocaleDateString('es-ES') : "-"}
                       </TableCell>
-                      <TableCell className="text-sm">{formatTime(task.estimatedHours)}</TableCell>
-                      <TableCell className="text-sm">{formatTime(task.actualHours)}</TableCell>
+                      <TableCell className="text-sm">{formatHoursToHMS(task.estimatedHours)}</TableCell>
+                      <TableCell className="text-sm">{formatHoursToHMS(task.actualHours)}</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1">
                           <Button

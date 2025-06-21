@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -42,11 +43,11 @@ interface TimeTrackerProps {
 
 const TimeTracker = ({ tasks, onTimeUpdate }: TimeTrackerProps) => {
   const { toast } = useToast();
-  const { formatTime } = useSettings();
+  const { formatHoursToHMS, parseHMSToHours } = useSettings();
   const [activeTimers, setActiveTimers] = useState<Record<string, Date>>({});
   const [manualTimeDialog, setManualTimeDialog] = useState(false);
   const [selectedTaskId, setSelectedTaskId] = useState<string>("");
-  const [manualHours, setManualHours] = useState("");
+  const [manualTime, setManualTime] = useState("00:00:00");
   const [timeDescription, setTimeDescription] = useState("");
   const [workDate, setWorkDate] = useState(new Date().toISOString().split('T')[0]);
   const [elapsedTimes, setElapsedTimes] = useState<Record<string, number>>({});
@@ -124,7 +125,7 @@ const TimeTracker = ({ tasks, onTimeUpdate }: TimeTrackerProps) => {
       
       toast({
         title: "Timer detenido",
-        description: `Se registraron ${hoursWorked.toFixed(2)} horas de trabajo`,
+        description: `Se registraron ${formatHoursToHMS(hoursWorked)} de trabajo`,
       });
     } catch (error) {
       console.error('Error:', error);
@@ -137,13 +138,13 @@ const TimeTracker = ({ tasks, onTimeUpdate }: TimeTrackerProps) => {
   };
 
   const addManualTime = async () => {
-    if (!selectedTaskId || !manualHours) return;
+    if (!selectedTaskId || !manualTime) return;
 
-    const hours = parseFloat(manualHours);
+    const hours = parseHMSToHours(manualTime);
     if (isNaN(hours) || hours <= 0) {
       toast({
         title: "Error",
-        description: "Ingrese un número válido de horas",
+        description: "Ingrese un tiempo válido en formato hh:mm:ss",
         variant: "destructive",
       });
       return;
@@ -171,7 +172,7 @@ const TimeTracker = ({ tasks, onTimeUpdate }: TimeTrackerProps) => {
 
       // Limpiar el formulario
       setSelectedTaskId("");
-      setManualHours("");
+      setManualTime("00:00:00");
       setTimeDescription("");
       setWorkDate(new Date().toISOString().split('T')[0]);
       setManualTimeDialog(false);
@@ -180,7 +181,7 @@ const TimeTracker = ({ tasks, onTimeUpdate }: TimeTrackerProps) => {
       
       toast({
         title: "Tiempo registrado",
-        description: `Se registraron ${hours} horas de trabajo`,
+        description: `Se registraron ${manualTime} de trabajo`,
       });
     } catch (error) {
       console.error('Error:', error);
@@ -194,7 +195,7 @@ const TimeTracker = ({ tasks, onTimeUpdate }: TimeTrackerProps) => {
 
   const formatElapsedTime = (elapsed: number) => {
     const hours = elapsed / (1000 * 60 * 60);
-    return formatTime(hours);
+    return formatHoursToHMS(hours);
   };
 
   return (
@@ -233,15 +234,14 @@ const TimeTracker = ({ tasks, onTimeUpdate }: TimeTrackerProps) => {
                 </select>
               </div>
               <div>
-                <Label htmlFor="hours">Horas trabajadas</Label>
+                <Label htmlFor="time">Tiempo trabajado (hh:mm:ss)</Label>
                 <Input
-                  id="hours"
-                  type="number"
-                  step="0.25"
-                  min="0"
-                  value={manualHours}
-                  onChange={(e) => setManualHours(e.target.value)}
-                  placeholder="Ej: 2.5"
+                  id="time"
+                  type="text"
+                  value={manualTime}
+                  onChange={(e) => setManualTime(e.target.value)}
+                  placeholder="02:30:00"
+                  pattern="[0-9]{2}:[0-9]{2}:[0-9]{2}"
                 />
               </div>
               <div>
@@ -284,7 +284,7 @@ const TimeTracker = ({ tasks, onTimeUpdate }: TimeTrackerProps) => {
                 <div className="flex items-center gap-2">
                   <Badge variant="outline" className="flex items-center gap-1">
                     <Clock className="h-3 w-3" />
-                    {formatTime(task.actual_hours || 0)}
+                    {formatHoursToHMS(task.actual_hours || 0)}
                   </Badge>
                   {activeTimers[task.id] ? (
                     <Button
