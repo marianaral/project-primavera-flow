@@ -19,21 +19,24 @@ const ProjectPage = () => {
   const { id } = useParams();
   const { toast } = useToast();
   const [project, setProject] = useState<any>(null);
+  const [tasks, setTasks] = useState<any[]>([]);
+  const [expenses, setExpenses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchProject = async () => {
+    const fetchProjectData = async () => {
       if (!id) return;
 
       try {
-        const { data, error } = await supabase
+        // Fetch project data
+        const { data: projectData, error: projectError } = await supabase
           .from('projects')
           .select('*')
           .eq('id', id)
           .single();
 
-        if (error) {
-          console.error('Error fetching project:', error);
+        if (projectError) {
+          console.error('Error fetching project:', projectError);
           toast({
             title: "Error",
             description: "No se pudo cargar el proyecto",
@@ -42,9 +45,31 @@ const ProjectPage = () => {
           return;
         }
 
-        if (data) {
-          const transformedProject = transformDatabaseProject(data as DatabaseProject);
+        // Fetch tasks data
+        const { data: tasksData, error: tasksError } = await supabase
+          .from('tasks')
+          .select('*')
+          .eq('project_id', id);
+
+        if (tasksError) {
+          console.error('Error fetching tasks:', tasksError);
+        }
+
+        // Fetch expenses data
+        const { data: expensesData, error: expensesError } = await supabase
+          .from('expenses')
+          .select('*')
+          .eq('project_id', id);
+
+        if (expensesError) {
+          console.error('Error fetching expenses:', expensesError);
+        }
+
+        if (projectData) {
+          const transformedProject = transformDatabaseProject(projectData as DatabaseProject);
           setProject(transformedProject);
+          setTasks(tasksData || []);
+          setExpenses(expensesData || []);
         }
       } catch (error) {
         console.error('Error:', error);
@@ -58,7 +83,7 @@ const ProjectPage = () => {
       }
     };
 
-    fetchProject();
+    fetchProjectData();
   }, [id, toast]);
 
   if (loading) {
@@ -139,32 +164,32 @@ const ProjectPage = () => {
           <div className="hidden sm:block md:hidden mb-4">
             <div className="grid grid-cols-3 gap-2">
               <TabsList className="grid grid-cols-1 h-auto">
-                <TabsTrigger value="overview" className="text-sm px-2 py-2 whitespace-nowrap">
+                <TabsTrigger value="overview" className="text-xs px-2 py-2 whitespace-nowrap">
                   Información
                 </TabsTrigger>
               </TabsList>
               <TabsList className="grid grid-cols-1 h-auto">
-                <TabsTrigger value="tasks" className="text-sm px-2 py-2 whitespace-nowrap">
+                <TabsTrigger value="tasks" className="text-xs px-2 py-2 whitespace-nowrap">
                   Tareas
                 </TabsTrigger>
               </TabsList>
               <TabsList className="grid grid-cols-1 h-auto">
-                <TabsTrigger value="requirements" className="text-sm px-2 py-2 whitespace-nowrap">
+                <TabsTrigger value="requirements" className="text-xs px-2 py-2 whitespace-nowrap">
                   Requisitos
                 </TabsTrigger>
               </TabsList>
               <TabsList className="grid grid-cols-1 h-auto">
-                <TabsTrigger value="expenses" className="text-sm px-2 py-2 whitespace-nowrap">
+                <TabsTrigger value="expenses" className="text-xs px-2 py-2 whitespace-nowrap">
                   Gastos
                 </TabsTrigger>
               </TabsList>
               <TabsList className="grid grid-cols-1 h-auto">
-                <TabsTrigger value="finances" className="text-sm px-2 py-2 whitespace-nowrap">
+                <TabsTrigger value="finances" className="text-xs px-2 py-2 whitespace-nowrap">
                   Finanzas
                 </TabsTrigger>
               </TabsList>
               <TabsList className="grid grid-cols-1 h-auto">
-                <TabsTrigger value="metrics" className="text-sm px-2 py-2 whitespace-nowrap">
+                <TabsTrigger value="metrics" className="text-xs px-2 py-2 whitespace-nowrap">
                   Métricas
                 </TabsTrigger>
               </TabsList>
@@ -218,7 +243,7 @@ const ProjectPage = () => {
           </TabsContent>
           
           <TabsContent value="metrics" className="mt-3 sm:mt-4 md:mt-6">
-            <ProjectMetrics project={project} />
+            <ProjectMetrics project={project} tasks={tasks} expenses={expenses} />
           </TabsContent>
         </div>
       </Tabs>
