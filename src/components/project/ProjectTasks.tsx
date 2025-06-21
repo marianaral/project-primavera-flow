@@ -53,7 +53,7 @@ type TaskViewType = "list" | "status-columns" | "priority-columns";
 
 const ProjectTasks = ({ project }: ProjectTasksProps) => {
   const { toast } = useToast();
-  const { formatHoursToHMS } = useSettings();
+  const { formatHoursToHMS, parseHMSToHours } = useSettings();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -63,8 +63,7 @@ const ProjectTasks = ({ project }: ProjectTasksProps) => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewType, setViewType] = useState<TaskViewType>("list");
-  const [activeTimers, setActiveTimers] = useState<Record<string, Date>>({});
-  const [elapsedTimes, setElapsedTimes] = useState<Record<string, string>>({});
+  const [activeTimers, setActiveTimers] = useState<Record<string, { startTime: Date; elapsedTime: string }>>({});
 
   // Update elapsed times for active timers - real-time hh:mm:ss
   useEffect(() => {
@@ -137,7 +136,7 @@ const ProjectTasks = ({ project }: ProjectTasksProps) => {
     }
   };
 
-  const handleTimerUpdate = (timers: Record<string, Date>) => {
+  const handleTimerUpdate = (timers: Record<string, { startTime: Date; elapsedTime: string }>) => {
     setActiveTimers(timers);
   };
 
@@ -361,9 +360,11 @@ const ProjectTasks = ({ project }: ProjectTasksProps) => {
   };
 
   const getDisplayTime = (taskId: string, actualHours: number) => {
-    if (activeTimers[taskId] && elapsedTimes[taskId]) {
-      const currentHours = actualHours + (parseFloat(elapsedTimes[taskId].split(':').reduce((acc, time, i) => acc + parseInt(time) / Math.pow(60, i), 0)) || 0);
-      return formatHoursToHMS(currentHours);
+    if (activeTimers[taskId]) {
+      // Parse the elapsed time string to hours and add to actual hours
+      const elapsedHours = parseHMSToHours(activeTimers[taskId].elapsedTime);
+      const totalHours = actualHours + elapsedHours;
+      return formatHoursToHMS(totalHours);
     }
     return formatHoursToHMS(actualHours);
   };
@@ -479,7 +480,7 @@ const ProjectTasks = ({ project }: ProjectTasksProps) => {
                           </div>
                           {activeTimers[task.id] && (
                             <div className="text-xs text-blue-600 font-mono">
-                              ⏱️ {elapsedTimes[task.id] || "00:00:00"}
+                              ⏱️ {activeTimers[task.id].elapsedTime}
                             </div>
                           )}
                         </div>

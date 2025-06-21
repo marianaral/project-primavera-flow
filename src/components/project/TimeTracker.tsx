@@ -38,7 +38,7 @@ interface TimeEntry {
 interface TimeTrackerProps {
   tasks: Task[];
   onTimeUpdate: () => void;
-  onTimerUpdate?: (timers: Record<string, Date>) => void;
+  onTimerUpdate?: (timers: Record<string, { startTime: Date; elapsedTime: string }>) => void;
 }
 
 const TimeTracker = ({ tasks, onTimeUpdate, onTimerUpdate }: TimeTrackerProps) => {
@@ -57,6 +57,7 @@ const TimeTracker = ({ tasks, onTimeUpdate, onTimerUpdate }: TimeTrackerProps) =
     const interval = setInterval(() => {
       const now = new Date();
       const newElapsedTimes: Record<string, string> = {};
+      const timerData: Record<string, { startTime: Date; elapsedTime: string }> = {};
       
       Object.entries(activeTimers).forEach(([taskId, startTime]) => {
         const elapsedMs = now.getTime() - startTime.getTime();
@@ -66,20 +67,23 @@ const TimeTracker = ({ tasks, onTimeUpdate, onTimerUpdate }: TimeTrackerProps) =
         const minutes = Math.floor((elapsedSeconds % 3600) / 60);
         const seconds = elapsedSeconds % 60;
         
-        newElapsedTimes[taskId] = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        const elapsedTimeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        newElapsedTimes[taskId] = elapsedTimeString;
+        timerData[taskId] = {
+          startTime,
+          elapsedTime: elapsedTimeString
+        };
       });
       
       setElapsedTimes(newElapsedTimes);
+      
+      // Notify parent component when timers change
+      if (onTimerUpdate) {
+        onTimerUpdate(timerData);
+      }
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [activeTimers]);
-
-  // Notify parent component when timers change
-  useEffect(() => {
-    if (onTimerUpdate) {
-      onTimerUpdate(activeTimers);
-    }
   }, [activeTimers, onTimerUpdate]);
 
   const startTimer = (taskId: string) => {
