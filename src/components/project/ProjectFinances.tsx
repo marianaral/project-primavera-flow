@@ -25,6 +25,7 @@ import {
 import ExpenseForm from "./ExpenseForm";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useSettings } from "@/hooks/useSettings";
 
 interface Expense {
   id: string;
@@ -42,6 +43,7 @@ interface ProjectFinancesProps {
 
 const ProjectFinances = ({ project }: ProjectFinancesProps) => {
   const { toast } = useToast();
+  const { formatCurrency } = useSettings();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -331,7 +333,7 @@ const ProjectFinances = ({ project }: ProjectFinancesProps) => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${project.budget.toLocaleString()}</div>
+            <div className="text-2xl font-bold">{formatCurrency(project.budget)}</div>
             <p className="text-xs text-muted-foreground">Asignado al proyecto</p>
           </CardContent>
         </Card>
@@ -344,7 +346,7 @@ const ProjectFinances = ({ project }: ProjectFinancesProps) => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-400">${totalApprovedExpenses.toLocaleString()}</div>
+            <div className="text-2xl font-bold text-red-400">{formatCurrency(totalApprovedExpenses)}</div>
             <p className="text-xs text-muted-foreground">{budgetUsage.toFixed(1)}% del presupuesto</p>
           </CardContent>
         </Card>
@@ -357,7 +359,7 @@ const ProjectFinances = ({ project }: ProjectFinancesProps) => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-400">${remainingBudget.toLocaleString()}</div>
+            <div className="text-2xl font-bold text-green-400">{formatCurrency(remainingBudget)}</div>
             <p className="text-xs text-muted-foreground">{(100 - budgetUsage).toFixed(1)}% restante</p>
           </CardContent>
         </Card>
@@ -400,7 +402,7 @@ const ProjectFinances = ({ project }: ProjectFinancesProps) => {
                       {getCategoryBadge(category as Expense['category'])}
                     </div>
                     <div className="text-right">
-                      <div className="font-semibold">${amount.toLocaleString()}</div>
+                      <div className="font-semibold">{formatCurrency(amount)}</div>
                       <div className="text-xs text-muted-foreground">{percentage.toFixed(1)}%</div>
                     </div>
                   </div>
@@ -444,7 +446,7 @@ const ProjectFinances = ({ project }: ProjectFinancesProps) => {
                       </div>
                     </TableCell>
                     <TableCell className="font-semibold">
-                      ${expense.amount.toLocaleString()}
+                      {formatCurrency(expense.amount)}
                     </TableCell>
                     <TableCell>
                       {getStatusBadge(expense.status)}
